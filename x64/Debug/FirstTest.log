@@ -1,0 +1,6 @@
+﻿  Model.cpp
+C:\Users\LarsStiefelmeyer\OneDrive - ETH Zurich\Projects\OpenGL\Tests\FirstTest\Models\OBJ_Loader.h(949,18): warning C4244: "Initialisierung": Konvertierung von "double" in "float", möglicher Datenverlust
+C:\Users\LarsStiefelmeyer\OneDrive - ETH Zurich\Projects\OpenGL\Tests\FirstTest\Models\Model.cpp(27,54): warning C4244: "Argument": Konvertierung von "int" in "float", möglicher Datenverlust
+C:\Users\LarsStiefelmeyer\OneDrive - ETH Zurich\Projects\OpenGL\Tests\FirstTest\Models\Model.cpp(72,33): warning C4267: "=": Konvertierung von "size_t" nach "unsigned int", Datenverlust möglich
+C:\Users\LarsStiefelmeyer\OneDrive - ETH Zurich\Projects\OpenGL\Tests\FirstTest\Models\Model.cpp(77,44): warning C4267: "=": Konvertierung von "size_t" nach "unsigned int", Datenverlust möglich
+  FirstTest.vcxproj -> C:\Users\LarsStiefelmeyer\OneDrive - ETH Zurich\Projects\OpenGL\Tests\FirstTest\x64\Debug\FirstTest.exe
