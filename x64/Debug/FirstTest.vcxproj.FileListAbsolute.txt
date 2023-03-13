@@ -1,2 +1,0 @@
-C:\Users\LarsStiefelmeyer\OneDrive - ETH Zurich\Projects\OpenGL\Tests\FirstTest\x64\Debug\FirstTest.exe
-C:\Users\LarsStiefelmeyer\OneDrive - ETH Zurich\Projects\OpenGL\Tests\FirstTest\x64\Debug\FirstTest.pdb
