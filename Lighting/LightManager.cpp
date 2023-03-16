@@ -68,6 +68,7 @@ void LightManager::removeLight(int id)
 
 void LightManager::setLights(ShaderProgram& shaderProgram)
 {
+    shaderProgram.use();
     shaderProgram.setInt("SpotLightAmt", spotLights.size());
     shaderProgram.setInt("PointLightAmt", pointLights.size());
     shaderProgram.setInt("DirectionalLightAmt", directionalLights.size());
@@ -116,6 +117,7 @@ void LightManager::setLight(ShaderProgram& shaderProgram, SpotLight light)
 }
 void LightManager::setLight(ShaderProgram& shaderProgram, DirectionalLight light)
 {
+    shaderProgram.use();
     std::string loc = "DirectionalLights[";
     loc += std::to_string(light.ID - maxSpotAmt - maxPointAmt);
     loc += "].";

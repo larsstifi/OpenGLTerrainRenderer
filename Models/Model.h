@@ -31,7 +31,8 @@ public:
         loadModel(path);
     }
     void setDefaultTexture(const char* filePath);
-    void draw(ShaderProgram& shader, glm::mat4 model);
+    void draw(ShaderProgram& shader, glm::mat4 model, bool setMat = true);
+    static unsigned int loadTexture(std::string filePath);
 private:
     // model data
     std::vector<MeshRenderer> meshes;
@@ -40,5 +41,4 @@ private:
     std::vector<unsigned int> matIndices;
 
     void loadModel(std::string path);
-    unsigned int loadTexture(std::string filePath);
 };

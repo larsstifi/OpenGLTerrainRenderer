@@ -84,16 +84,16 @@ ShaderProgram::ShaderProgram(const char* vertexShaderPath, const char *geometryS
 		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
-	unsigned int geometryShader = glCreateShader(GL_VERTEX_SHADER);
-	std::string vs = readFile(geometryShaderPath);
-	const char* gsP = vs.c_str();
+	unsigned int geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+	std::string gs = readFile(geometryShaderPath);
+	const char* gsP = gs.c_str();
 	glShaderSource(geometryShader, 1, &gsP, NULL);
 	glCompileShader(geometryShader);
 	glGetShaderiv(geometryShader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
 		glGetShaderInfoLog(geometryShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+		std::cout << "ERROR::SHADER::GEOM::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 
 

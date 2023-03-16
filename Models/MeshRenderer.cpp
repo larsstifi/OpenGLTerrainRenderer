@@ -27,7 +27,7 @@ void MeshRenderer::fillBuffers(std::vector < objl::Vertex >& vert, std::vector<u
 }
 
 
-void MeshRenderer::draw(ShaderProgram& shaderProgram, glm::mat4 model) const {
+void MeshRenderer::draw() const {
     //set vao context
     glBindVertexArray(VAO);
     //draw elements stored in VAO

@@ -57,6 +57,8 @@
   <ItemGroup>
     <None Include="Shaders\fragment.frag" />
     <None Include="Shaders\vs.vert" />
-    <None Include="Shaders\GeometryShader.geom" />
+    <None Include="Shaders\Foliage.geom" />
+    <None Include="Shaders\Foliage.frag" />
+    <None Include="Shaders\Foliage.vert" />
   </ItemGroup>
 </Project>

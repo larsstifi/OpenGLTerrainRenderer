@@ -9,14 +9,12 @@ std::vector<Texture> loadedTextures;
 
 
 
-void Model::draw(ShaderProgram& shader, glm::mat4 model) {
+void Model::draw(ShaderProgram& shader, glm::mat4 model, bool setMat) {
     shader.use();
     shader.setMat4("model", model);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, defaultTexture);
     Material activeMat;
 	for (unsigned int i = 0; i < meshes.size(); i++) {
-        if (activeMat.name != materials[matIndices[i]].name) {
+        if (setMat && activeMat.name != materials[matIndices[i]].name) {
             activeMat = materials[matIndices[i]];
             shader.setVec3("AmbientColor",activeMat.AmbientColor);
             shader.setVec3("DiffuseColor", activeMat.DiffuseColor);
@@ -41,10 +39,9 @@ void Model::draw(ShaderProgram& shader, glm::mat4 model) {
         }
 
         
-		meshes[i].draw(shader, model);
+		meshes[i].draw();
 	}
 }
-
 void Model::loadModel(std::string path) {
     std::string directory = path.substr(0, path.find_last_of("/")+1);
     std::cout << directory << std::endl;
@@ -142,7 +139,7 @@ void Model::setDefaultTexture(const char* filePath) {
     defaultTexture = loadTexture(filePath);
 }
 
-unsigned int Model::loadTexture(std::string filePath) {
+unsigned int Model::loadTexture(std::string filePath){
     //textures
     if (filePath == "" || filePath.back()=='/' ) {
         return 0;

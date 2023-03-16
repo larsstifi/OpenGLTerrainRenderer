@@ -31,10 +31,11 @@ unsigned int VAO;
 unsigned int VBO;
 unsigned int EBO;
 
-unsigned int texture1;
+unsigned int grassTexture;
 
 GLFWwindow* window;
 ShaderProgram objectShader;
+ShaderProgram foliageShader;
 Model m;
 
 ShaderProgram lightingShader;
@@ -90,8 +91,6 @@ void Render() {
     //stores positions of model
     glm::vec3 positions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f),
-    glm::vec3(5.0f,  0.0f,  0.0f),
-    glm::vec3(-5.0f,  0.0f,  0.0f)
     };
     //set background color
     glClearColor(0.2f, 0.2f, 0.2f, 0.f);
@@ -108,35 +107,60 @@ void Render() {
     objectShader.setMat4("view", view);
     objectShader.setMat4("projection", projection);
     objectShader.setVec3("viewPos", camPos);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
 
-    //set light positions
-    
+    //set headlightlight positions
     headlight.pos = camPos;
     headlight.dir = camFront;
     lm.setLight(objectShader, headlight);
 
-    for (unsigned int i = 0; i < 3; i++)
+
+    //render each object
+    for (unsigned int i = 0; i < 1; i++)
     {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, positions[i]);
-        model = glm::scale(model, glm::vec3(0.05));
+        model = glm::scale(model, glm::vec3(1));
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
         m.draw(objectShader, model);
     }
 
+    //draw foliage
+    foliageShader.use();
+    foliageShader.setMat4("view", view);
+    foliageShader.setMat4("projection", projection);
+    foliageShader.setVec3("viewPos", camPos);
+    foliageShader.setFloat("dt", (float)glfwGetTime());
+    //set headlightlight positions
+    lm.setLight(foliageShader, headlight);
+
+
+    //render each object
+    for (unsigned int i = 0; i < 1; i++)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, positions[i]);
+        model = glm::scale(model, glm::vec3(1));
+        float angle = 20.0f * i;
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        m.draw(foliageShader, model);
+    }
+    //update screen
     glfwSwapBuffers(window);
 }
 
 bool Setup() {
+
+    //setup OpenGL
     glfwInit();
-
-
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
+    
+    //create Window
     window = glfwCreateWindow(windowWidth, windowHeight, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
@@ -151,18 +175,21 @@ bool Setup() {
         return false;
     }
 
+    //OpenGL render settings
     glViewport(0, 0, windowWidth, windowHeight);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    //define callbacks
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
+    //setup generel object shader
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT);
     objectShader = ShaderProgram(vertexShaderPath, fragmentShaderPath);
@@ -175,10 +202,24 @@ bool Setup() {
     objectShader.setInt("BumpTexture", 5);
     objectShader.setBool("blinn", true);
 
+    //setup foliage shader
+    foliageShader = ShaderProgram("Shaders/Foliage.vert", "Shaders/Foliage.geom", "Shaders/Foliage.frag");
+    foliageShader.use();
+    foliageShader.setInt("AmbientTexture", 0);
+    foliageShader.setInt("DiffuseTexture", 1);
+    foliageShader.setInt("SpecularTexture", 2);
+    foliageShader.setInt("SpecularHighlightTexture", 3);
+    foliageShader.setInt("AlphaTexture", 4);
+    foliageShader.setInt("BumpTexture", 5);
+    foliageShader.setBool("blinn", true);
+    grassTexture = Model::loadTexture("Models/grass.png");
+    
+    //setup cam position
     camPos = glm::vec3(0.0f, 0.0f, 3.0f);
     camFront = glm::vec3(0.0f, 0.0f, -1.0f);
     camUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
+    //setup lights
     DirLightDir = glm::vec3(0.f, -0.3f, 0.5f);
     sun.dir = glm::vec3(0.f, -0.3f, 0.5f);
     lm.addLight(sun);
@@ -190,7 +231,11 @@ bool Setup() {
     headlight.cutOff = glm::cos(glm::radians(12.5f));
     headlight.outerCutOff = glm::cos(glm::radians(17.5f));
     lm.addLight(headlight);
+
+    //set world lights params in shaders
     lm.setLights(objectShader);
+    lm.setLights(foliageShader);
+
 
     return true;
 }
@@ -232,6 +277,7 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
         sun.dir = glm::rotate(glm::mat4(1.f), deltaTime, glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(sun.dir, 1.f);
         lm.setLight(objectShader, sun);
+        lm.setLight(foliageShader, sun);
     }
 }
 

@@ -26,7 +26,6 @@ private:
 	unsigned int indicesAmt;
 	unsigned int texture;
 public:
-	void draw(ShaderProgram& shaderProgram, glm::mat4 model) const;
+	void draw() const;
 	void fillBuffers(std::vector<objl::Vertex>& vert, std::vector<unsigned int>& indi);
-	void setTexture(const char * filePath);
 };
