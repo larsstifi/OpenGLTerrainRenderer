@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <Shaders/ShaderProgram.h>
+#include "DualContouring.h"
 
 #include <iostream>
 #include <fstream>
@@ -27,5 +28,7 @@ private:
 	unsigned int texture;
 public:
 	void draw() const;
+	void drawInstanced(unsigned int count) const;
 	void fillBuffers(std::vector<objl::Vertex>& vert, std::vector<unsigned int>& indi);
+	void fillBuffers(std::vector<dc::Vertex>& vert, std::vector<unsigned int>& indi);
 };

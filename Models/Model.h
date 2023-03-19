@@ -2,6 +2,7 @@
 #include <Shaders\ShaderProgram.h>
 #include <Models\MeshRenderer.h>
 #include <Models\OBJ_Loader.h>
+#include "DualContouring.h"
 
 struct Material {
     std::string name;
@@ -12,12 +13,12 @@ struct Material {
     float OpticalDensity;
     float Dissolve;
     int Illumination;
-    unsigned int AmbientTexture;
-    unsigned int DiffuseTexture;
-    unsigned int SpecularTexture;
-    unsigned int SpecularHightlightTexture;
-    unsigned int AlphaTexture;
-    unsigned int BumpTexture;
+    unsigned int AmbientTexture = 0;
+    unsigned int DiffuseTexture = 0;
+    unsigned int SpecularTexture= 0;
+    unsigned int SpecularHightlightTexture = 0;
+    unsigned int AlphaTexture = 0;
+    unsigned int BumpTexture = 0;
 
 };
 
@@ -30,9 +31,15 @@ public:
         setDefaultTexture(pathDefaultTexture);
         loadModel(path);
     }
+    Model(dc::Mesh& mesh, const char* pathDefaultTexture)
+    {
+        setDefaultTexture(pathDefaultTexture);
+        loadModel(mesh);
+    }
     void setDefaultTexture(const char* filePath);
-    void draw(ShaderProgram& shader, glm::mat4 model, bool setMat = true);
-    static unsigned int loadTexture(std::string filePath);
+    void draw(ShaderProgram& shader, glm::mat4& model, bool setMat = true);
+    void drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat = true);
+    static unsigned int loadTexture(std::string filePath, int mode = 0);
 private:
     // model data
     std::vector<MeshRenderer> meshes;
@@ -41,4 +48,5 @@ private:
     std::vector<unsigned int> matIndices;
 
     void loadModel(std::string path);
+    void loadModel(dc::Mesh& mesh);
 };

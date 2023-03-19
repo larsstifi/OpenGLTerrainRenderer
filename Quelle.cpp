@@ -13,6 +13,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <FastNoise/FastNoise.h>
 bool Setup();
 void Render();
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -32,11 +34,19 @@ unsigned int VBO;
 unsigned int EBO;
 
 unsigned int grassTexture;
+unsigned int debugTexture;
 
 GLFWwindow* window;
 ShaderProgram objectShader;
 ShaderProgram foliageShader;
+ShaderProgram debugShader;
+
+
 Model m;
+Model terrain; 
+glm::vec3 positions[] = {
+    glm::vec3(0.0f,  0.0f,  0.0f),
+};
 
 ShaderProgram lightingShader;
 glm::vec3 DirLightDir;
@@ -48,6 +58,9 @@ float fov = 45.f;
 glm::vec3 camPos;
 glm::vec3 camUp;
 glm::vec3 camFront;
+
+glm::mat4 view;
+glm::mat4 projection;
 
 bool firstMouse = true;
 float lastX = 400, lastY = 300;
@@ -61,13 +74,20 @@ int main()
     if (!Setup()) {
         return -1;
     }
-    m = Model("Models/Backpack/backpack.obj", "Models/Solid_white.jpg");
-
+    m = Model("Models/Tree/tree low.obj", "Models/Solid_white.jpg");
+    FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("DQAFAAAAAAAAQAgAAAAAAD8AAAAAAA==");
+    long size = 65;
+    std::vector<float> noiseOutput(size * size * size);
+    // Generate a 16 x 16 x 16 area of noise
+    fnGenerator->GenUniformGrid3D(noiseOutput.data(), 0, 0, 0, size, size, size, 0.01f, 1337);
+    dc::Mesh mesh = dc::generateMesh(noiseOutput, size);
+    terrain = Model(mesh, "Models/container.jpg");
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+        //std::cout << "FPS: " << 1 / deltaTime << std::endl;
         // input
         // -----
         processInput(window);
@@ -87,28 +107,12 @@ int main()
     return 0;
 }
 
-void Render() {
-    //stores positions of model
-    glm::vec3 positions[] = {
-    glm::vec3(0.0f,  0.0f,  0.0f),
-    };
-    //set background color
-    glClearColor(0.2f, 0.2f, 0.2f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //set view matrices etc.
-    glm::mat4 view = glm::lookAt(camPos,
-        camFront + camPos,
-        camUp);
-
-    glm::mat4 projection;
-    projection = projection = glm::perspective(glm::radians(fov), ((float)windowWidth) / windowHeight, 0.1f, 100.0f);
+void RenderObjects() {
     objectShader.use();
     objectShader.setMat4("view", view);
     objectShader.setMat4("projection", projection);
     objectShader.setVec3("viewPos", camPos);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
+
 
     //set headlightlight positions
     headlight.pos = camPos;
@@ -124,9 +128,11 @@ void Render() {
         model = glm::scale(model, glm::vec3(1));
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        m.draw(objectShader, model);
+        terrain.draw(objectShader, model);
     }
+}
 
+void RenderFoliage() {
     //draw foliage
     foliageShader.use();
     foliageShader.setMat4("view", view);
@@ -135,6 +141,14 @@ void Render() {
     foliageShader.setFloat("dt", (float)glfwGetTime());
     //set headlightlight positions
     lm.setLight(foliageShader, headlight);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
 
 
     //render each object
@@ -145,8 +159,49 @@ void Render() {
         model = glm::scale(model, glm::vec3(1));
         float angle = 20.0f * i;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        m.draw(foliageShader, model);
+        terrain.drawInstanced(foliageShader, model, 10, false);
     }
+}
+
+void RenderDebug() {
+    debugShader.use();
+    debugShader.setMat4("view", view);
+    debugShader.setMat4("projection", projection);
+    debugShader.setVec3("viewPos", camPos);
+    debugShader.setFloat("dt", (float)glfwGetTime());
+    //set headlightlight positions
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, debugTexture);
+
+
+    //render each object
+    for (unsigned int i = 0; i < 1; i++)
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, positions[i]);
+        model = glm::scale(model, glm::vec3(1));
+        float angle = 20.0f * i;
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        terrain.draw(debugShader, model, false);
+    }
+}
+
+void Render() {
+    //set background color
+    glClearColor(0.2f, 0.2f, 0.2f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //set view matrices etc.
+    view = glm::lookAt(camPos,
+        camFront + camPos,
+        camUp);
+
+    
+    projection = projection = glm::perspective(glm::radians(fov), ((float)windowWidth) / windowHeight, 0.1f, 100.0f);
+    RenderObjects();
+    RenderFoliage();
+    //RenderDebug();
+
     //update screen
     glfwSwapBuffers(window);
 }
@@ -178,14 +233,14 @@ bool Setup() {
     //OpenGL render settings
     glViewport(0, 0, windowWidth, windowHeight);
     glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+   // glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     //define callbacks
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
@@ -212,7 +267,27 @@ bool Setup() {
     foliageShader.setInt("AlphaTexture", 4);
     foliageShader.setInt("BumpTexture", 5);
     foliageShader.setBool("blinn", true);
-    grassTexture = Model::loadTexture("Models/grass.png");
+    grassTexture = Model::loadTexture("Models/grass3.png", 1);
+    foliageShader.setVec3("AmbientColor", glm::vec3(0.7, 0.6, 0.3));
+    foliageShader.setVec3("DiffuseColor", glm::vec3(0.7, 0.6, 0.3));
+    foliageShader.setVec3("SpecularColor", glm::vec3(0.45, 0.4, 0.2));
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
+
+
+    //setup debug shader
+    debugShader = ShaderProgram("Shaders/Debug.vert", "Shaders/Debug.geom", "Shaders/Debug.frag");
+    debugShader.use();
+    debugShader.setInt("texture1", 0);
+    debugTexture = Model::loadTexture("Models/debug-texture", 1);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, debugTexture);
     
     //setup cam position
     camPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -226,7 +301,7 @@ bool Setup() {
     headlight.dir = camFront;
     headlight.pos = camPos;
     headlight.constant = 1.f;
-    headlight.linear = 0.09f;
+    headlight.linear = 0.19f;
     headlight.quadratic = 0.036f;
     headlight.cutOff = glm::cos(glm::radians(12.5f));
     headlight.outerCutOff = glm::cos(glm::radians(17.5f));
@@ -265,10 +340,14 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camPos += glm::normalize(glm::cross(camFront, camUp)) * cameraSpeed;
 
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
         objectShader.setBool("blinn", true);
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+        foliageShader.setBool("blinn", true);
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
         objectShader.setBool("blinn", false);
+        foliageShader.setBool("blinn", false);
+    }
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)

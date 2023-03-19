@@ -102,7 +102,7 @@ void LightManager::setLight(ShaderProgram& shaderProgram, int id)
     setLight(shaderProgram, getDirectionalLight(id));
 }
 
-void LightManager::setLight(ShaderProgram& shaderProgram, SpotLight light)
+void LightManager::setLight(ShaderProgram& shaderProgram, SpotLight& light)
 {
     std::string loc = "SpotLights[";
     loc += std::to_string(light.ID);
@@ -115,7 +115,7 @@ void LightManager::setLight(ShaderProgram& shaderProgram, SpotLight light)
     shaderProgram.setFloat(loc + "cutOff", light.cutOff);
     shaderProgram.setFloat(loc + "outerCutOff", light.outerCutOff);
 }
-void LightManager::setLight(ShaderProgram& shaderProgram, DirectionalLight light)
+void LightManager::setLight(ShaderProgram& shaderProgram, DirectionalLight& light)
 {
     shaderProgram.use();
     std::string loc = "DirectionalLights[";
@@ -123,7 +123,7 @@ void LightManager::setLight(ShaderProgram& shaderProgram, DirectionalLight light
     loc += "].";
     shaderProgram.setVec3(loc + "dir", light.dir);
 }
-void LightManager::setLight(ShaderProgram& shaderProgram, PointLight light)
+void LightManager::setLight(ShaderProgram& shaderProgram, PointLight& light)
 {
     std::string loc = "PointLights[";
     loc += std::to_string(light.ID - maxSpotAmt);
@@ -134,7 +134,7 @@ void LightManager::setLight(ShaderProgram& shaderProgram, PointLight light)
     shaderProgram.setFloat(loc + "quadratic", light.quadratic);
 }
 
-SpotLight LightManager::getSpotLight(int id) {
+SpotLight& LightManager::getSpotLight(int id) {
     for (size_t i = 0; i < spotLights.size(); i++)
     {
         if (spotLights[i].ID == id) {
@@ -143,7 +143,7 @@ SpotLight LightManager::getSpotLight(int id) {
     }
 }
 
-PointLight LightManager::getPointLight(int id)
+PointLight& LightManager::getPointLight(int id)
 {
     for (size_t i = 0; i < pointLights.size(); i++)
     {
@@ -153,7 +153,7 @@ PointLight LightManager::getPointLight(int id)
     }
 }
 
-DirectionalLight LightManager::getDirectionalLight(int id)
+DirectionalLight& LightManager::getDirectionalLight(int id)
 {
     for (size_t i = 0; i < directionalLights.size(); i++)
     {

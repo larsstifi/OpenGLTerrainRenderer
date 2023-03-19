@@ -63,13 +63,13 @@ public:
 
     void setLights(ShaderProgram& shaderProgram);
     void setLight(ShaderProgram& shaderProgram, int id);
-    void setLight(ShaderProgram& shaderProgram, SpotLight light);
-    void setLight(ShaderProgram& shaderProgram, PointLight light);
-    void setLight(ShaderProgram& shaderProgram, DirectionalLight light);
+    void setLight(ShaderProgram& shaderProgram, SpotLight& light);
+    void setLight(ShaderProgram& shaderProgram, PointLight& light);
+    void setLight(ShaderProgram& shaderProgram, DirectionalLight& light);
 private:
     std::stack<int> directionalIdTracker, pointIdTracker, spotIdTracker;
     
-    SpotLight getSpotLight(int id);
-    PointLight getPointLight(int id);
-    DirectionalLight getDirectionalLight(int id);
+    SpotLight& getSpotLight(int id);
+    PointLight& getPointLight(int id);
+    DirectionalLight& getDirectionalLight(int id);
 };

@@ -1,7 +1,7 @@
 #include<Models/Model.h>
 
 struct Texture {
-    unsigned int id;
+    unsigned int id = 0;
     std::string path;  // we store the path of the texture to compare with other textures
 };
 
@@ -9,7 +9,7 @@ std::vector<Texture> loadedTextures;
 
 
 
-void Model::draw(ShaderProgram& shader, glm::mat4 model, bool setMat) {
+void Model::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
     shader.use();
     shader.setMat4("model", model);
     Material activeMat;
@@ -42,6 +42,41 @@ void Model::draw(ShaderProgram& shader, glm::mat4 model, bool setMat) {
 		meshes[i].draw();
 	}
 }
+
+void Model::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat) {
+    shader.use();
+    shader.setMat4("model", model);
+    Material activeMat;
+    for (unsigned int i = 0; i < meshes.size(); i++) {
+        if (setMat && activeMat.name != materials[matIndices[i]].name) {
+            activeMat = materials[matIndices[i]];
+            shader.setVec3("AmbientColor", activeMat.AmbientColor);
+            shader.setVec3("DiffuseColor", activeMat.DiffuseColor);
+            shader.setVec3("SpecularColor", activeMat.SpecularColor);
+            shader.setFloat("SpecularExponent", activeMat.SpecularExponent);
+            shader.setFloat("OpticalDensity", activeMat.OpticalDensity);
+            shader.setFloat("Dissolve", activeMat.Dissolve);
+            shader.setFloat("Illumination", activeMat.Illumination);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, activeMat.AmbientTexture);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, activeMat.DiffuseTexture);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, activeMat.SpecularTexture);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D, activeMat.SpecularHightlightTexture);
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_2D, activeMat.AlphaTexture);
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_2D, activeMat.BumpTexture);
+
+        }
+
+
+        meshes[i].drawInstanced(count);
+    }
+}
+
 void Model::loadModel(std::string path) {
     std::string directory = path.substr(0, path.find_last_of("/")+1);
     std::cout << directory << std::endl;
@@ -73,6 +108,7 @@ void Model::loadModel(std::string path) {
             if (!alreadyExist) {
                 matIndex = materials.size();
                 if (curMat.name == "") {
+                    curMat.name = "default";
                     objl::Vector3 defaultCol = objl::Vector3(1.f, 1.f, 1.f);
                     curMat.Ka = defaultCol;
                     curMat.Kd = defaultCol;
@@ -133,13 +169,41 @@ void Model::loadModel(std::string path) {
 	
 }
 
+void Model::loadModel(dc::Mesh& mesh)
+{
+    MeshRenderer newRenderer;
+    newRenderer.fillBuffers(mesh.vertices, mesh.indices);
+    std::cout << "Mesh added  vertices Amt:" << mesh.vertices.size() << " Indices Amt:" << mesh.indices.size() << std::endl;
+    meshes.push_back(newRenderer);
+    matIndices.push_back(0);
+
+    Material newMat;
+    newMat.name = "default";
+    newMat.AmbientColor = glm::vec3(1,1,1);
+    newMat.DiffuseColor = glm::vec3(1,1,1);
+    newMat.SpecularColor = glm::vec3(1,1,1);
+    newMat.SpecularExponent = 1;
+    newMat.OpticalDensity = 0;
+    newMat.Dissolve = 0;
+    newMat.Illumination = 0;
+    newMat.AmbientTexture = defaultTexture;
+    newMat.DiffuseTexture = defaultTexture;
+    newMat.SpecularTexture = defaultTexture;
+    newMat.SpecularHightlightTexture = defaultTexture;
+    newMat.AlphaTexture = defaultTexture;
+    newMat.BumpTexture = defaultTexture;
+
+
+    materials.push_back(newMat);
+}
+
 
 void Model::setDefaultTexture(const char* filePath) {
     
     defaultTexture = loadTexture(filePath);
 }
 
-unsigned int Model::loadTexture(std::string filePath){
+unsigned int Model::loadTexture(std::string filePath, int mode) {
     //textures
     if (filePath == "" || filePath.back()=='/' ) {
         return 0;
@@ -151,31 +215,43 @@ unsigned int Model::loadTexture(std::string filePath){
             return loadedTextures[i].id;
         }
     }
-    std::cout << "New Texture at " << filePath << std::endl;
-    stbi_set_flip_vertically_on_load(false);
+    
+    stbi_set_flip_vertically_on_load(true);
     unsigned int texture;
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     // set the texture wrapping/filtering options (on the currently bound texture object)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (mode == 0) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+    else if (mode == 1) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+    
     // load and generate the texture
     int width, height, nrChannels;
     unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 0);
     if (data)
     {
-        GLenum format;
+        GLenum format = GL_RGB;
         if (nrChannels == 1)
             format = GL_RED;
         else if (nrChannels == 3)
             format = GL_RGB;
         else if (nrChannels == 4)
             format = GL_RGBA;
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
+        std::cout << "New Texture at " << filePath << " Number of Channels: "<< nrChannels << std::endl;
     }
     else
     {
