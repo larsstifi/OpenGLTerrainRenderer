@@ -21,6 +21,7 @@
 #include <FastNoise/FastNoise.h>
 bool Setup();
 void Render();
+void RenderImgui();
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -32,6 +33,7 @@ const char* fragmentShaderPath = "Shaders/fragment.frag";
 
 unsigned int windowWidth = 2000;
 unsigned int windowHeight = 1500;
+glm::vec3 bgCol(0.2f, 0.2f, 0.2f);
 
 unsigned int VAO;
 unsigned int VBO;
@@ -99,16 +101,7 @@ int main()
 
         // render
         // ------
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        bool t = true;
-        ImGui::ShowDemoWindow(&t);
-        ImGui::Render();
-        
-
         Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         // glfw: poll IO events (keys pressed/released, mouse moved etc.)
@@ -201,9 +194,37 @@ void RenderDebug() {
     }
 }
 
+void RenderImgui() {
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    static float f = 0.0f;
+    static int counter = 0;
+
+    ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+    ImGui::Text("This is some useful text.");
+
+    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+    ImGui::ColorEdit3("clear color", (float*)&bgCol); // Edit 3 floats representing a color
+
+    if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+        counter++;
+    ImGui::SameLine();
+    ImGui::Text("counter = %d", counter);
+
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", deltaTime * 1000, 1 / deltaTime);
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 void Render() {
     //set background color
-    glClearColor(0.2f, 0.2f, 0.2f, 0.f);
+    glClearColor(bgCol.x, bgCol.y, bgCol.z, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //set view matrices etc.
@@ -216,9 +237,12 @@ void Render() {
     RenderObjects();
     RenderFoliage();
     //RenderDebug();
+    RenderImgui();
 
     //update screen
 }
+
+
 
 bool Setup() {
 
