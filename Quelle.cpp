@@ -1,5 +1,9 @@
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_impl_glfw.h>
+//#include <imgui/imgui_impl_opengl3_loader.h>
 #include <Shaders/ShaderProgram.h>
 #include <Models/MeshRenderer.h>
 #include <Models/Model.h>
@@ -71,6 +75,7 @@ float lastFrame = 0.0f; // Time of last frame
 
 int main()
 {
+
     if (!Setup()) {
         return -1;
     }
@@ -94,8 +99,18 @@ int main()
 
         // render
         // ------
-        Render();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        bool t = true;
+        ImGui::ShowDemoWindow(&t);
+        ImGui::Render();
+        
 
+        Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwSwapBuffers(window);
         // glfw: poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwPollEvents();
@@ -203,7 +218,6 @@ void Render() {
     //RenderDebug();
 
     //update screen
-    glfwSwapBuffers(window);
 }
 
 bool Setup() {
@@ -234,15 +248,22 @@ bool Setup() {
     glViewport(0, 0, windowWidth, windowHeight);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-   // glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+    
 
     //define callbacks
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
 
     //setup generel object shader
     glClearColor(0.f, 0.f, 0.f, 0.f);
