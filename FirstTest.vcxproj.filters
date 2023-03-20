@@ -57,6 +57,12 @@
     <ClCompile Include="imgui\imgui_impl_glfw.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="imgui\imgui_stdlib.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="Terrain\NoiseGenerator.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -105,6 +111,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imgui_impl_glfw.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_stdlib.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="Terrain\NoiseGenerator.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

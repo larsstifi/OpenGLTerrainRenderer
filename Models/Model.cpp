@@ -172,7 +172,7 @@ void Model::loadModel(std::string path) {
 void Model::loadModel(dc::Mesh& mesh)
 {
     MeshRenderer newRenderer;
-    newRenderer.fillBuffers(mesh.vertices, mesh.indices);
+    if(mesh.vertices.size() > 0 && mesh.indices.size() > 0) newRenderer.fillBuffers(mesh.vertices, mesh.indices);
     std::cout << "Mesh added  vertices Amt:" << mesh.vertices.size() << " Indices Amt:" << mesh.indices.size() << std::endl;
     meshes.push_back(newRenderer);
     matIndices.push_back(0);
@@ -195,6 +195,17 @@ void Model::loadModel(dc::Mesh& mesh)
 
 
     materials.push_back(newMat);
+}
+
+void Model::clearModels()
+{
+    materials = std::vector<Material>();;
+    matIndices = std::vector<unsigned int>();
+    for (size_t i = 0; i < meshes.size(); i++)
+    {
+        meshes[i].clearBuffers();
+    }
+    meshes = std::vector<MeshRenderer>();
 }
 
 

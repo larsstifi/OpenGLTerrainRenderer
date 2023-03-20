@@ -1,6 +1,7 @@
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
+#include <imgui/imgui_stdlib.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_glfw.h>
 //#include <imgui/imgui_impl_opengl3_loader.h>
@@ -8,6 +9,7 @@
 #include <Models/MeshRenderer.h>
 #include <Models/Model.h>
 #include <Lighting/LightManager.h>
+#include <Terrain/NoiseGenerator.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
@@ -22,6 +24,7 @@
 bool Setup();
 void Render();
 void RenderImgui();
+void generateTerrain(int seed);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -35,10 +38,6 @@ unsigned int windowWidth = 2000;
 unsigned int windowHeight = 1500;
 glm::vec3 bgCol(0.2f, 0.2f, 0.2f);
 
-unsigned int VAO;
-unsigned int VBO;
-unsigned int EBO;
-
 unsigned int grassTexture;
 unsigned int debugTexture;
 
@@ -48,14 +47,14 @@ ShaderProgram foliageShader;
 ShaderProgram debugShader;
 
 
-Model m;
 Model terrain; 
+std::vector<Model *> objects;
+
 glm::vec3 positions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f),
 };
 
 ShaderProgram lightingShader;
-glm::vec3 DirLightDir;
 DirectionalLight sun;
 SpotLight headlight;
 LightManager lm(5, 5, 5);
@@ -64,6 +63,7 @@ float fov = 45.f;
 glm::vec3 camPos;
 glm::vec3 camUp;
 glm::vec3 camFront;
+bool cursorEnabled = true;
 
 glm::mat4 view;
 glm::mat4 projection;
@@ -75,20 +75,33 @@ float yaw, pitch;
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 
+
+int terrainSize = 32;
+float sphereSize = 100;
+float sphereIntensity = 0.5f;
+FastNoise::SmartNode<> fnGenerator;
+NoiseGenerator noiseGenerator;
+
+//imgui params
+bool gui_RenderDebug = false;
+bool gui_RenderFoliage = false;
+bool gui_RenderObjects = true;
+bool gui_InfoWindow = true;
+bool gui_DemoWindow = false;
+float gui_CamSpeed = 2.5f;
+std::string gui_FoliageTexturePath{ "Models/grass3.png" };
+
 int main()
 {
 
     if (!Setup()) {
         return -1;
     }
-    m = Model("Models/Tree/tree low.obj", "Models/Solid_white.jpg");
-    FastNoise::SmartNode<> fnGenerator = FastNoise::NewFromEncodedNodeTree("DQAFAAAAAAAAQAgAAAAAAD8AAAAAAA==");
-    long size = 65;
-    std::vector<float> noiseOutput(size * size * size);
-    // Generate a 16 x 16 x 16 area of noise
-    fnGenerator->GenUniformGrid3D(noiseOutput.data(), 0, 0, 0, size, size, size, 0.01f, 1337);
-    dc::Mesh mesh = dc::generateMesh(noiseOutput, size);
-    terrain = Model(mesh, "Models/container.jpg");
+    Model m("Models/Tree/tree low.obj", "Models/Solid_white.jpg");
+    objects.push_back(&m);
+    fnGenerator = FastNoise::NewFromEncodedNodeTree("DQAFAAAAAAAAQAgAAAAAAD8AAAAAAA==");
+    generateTerrain(rand());
+    objects.push_back(&terrain);
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -129,14 +142,12 @@ void RenderObjects() {
 
 
     //render each object
-    for (unsigned int i = 0; i < 1; i++)
+    for (unsigned int i = 0; i < objects.size(); i++)
     {
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, positions[i]);
+        model = glm::translate(model, positions[0]);
         model = glm::scale(model, glm::vec3(1));
-        float angle = 20.0f * i;
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        terrain.draw(objectShader, model);
+        objects[i]->draw(objectShader, model);
     }
 }
 
@@ -160,14 +171,12 @@ void RenderFoliage() {
 
 
     //render each object
-    for (unsigned int i = 0; i < 1; i++)
+    for (unsigned int i = 0; i < objects.size(); i++)
     {
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, positions[i]);
+        model = glm::translate(model, positions[0]);
         model = glm::scale(model, glm::vec3(1));
-        float angle = 20.0f * i;
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        terrain.drawInstanced(foliageShader, model, 10, false);
+        objects[i]->draw(foliageShader, model, false);
     }
 }
 
@@ -183,14 +192,12 @@ void RenderDebug() {
 
 
     //render each object
-    for (unsigned int i = 0; i < 1; i++)
+    for (unsigned int i = 0; i < objects.size(); i++)
     {
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, positions[i]);
+        model = glm::translate(model, positions[0]);
         model = glm::scale(model, glm::vec3(1));
-        float angle = 20.0f * i;
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        terrain.draw(debugShader, model, false);
+        objects[i]->draw(debugShader, model, false);
     }
 }
 
@@ -203,20 +210,62 @@ void RenderImgui() {
     static float f = 0.0f;
     static int counter = 0;
 
-    ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+    ImGui::Begin("Main Config");    
+    if (ImGui::CollapsingHeader("Render Settings")) {// Create a window called "Hello, world!" and append into it.
+        ImGui::Checkbox("Show Objects", &gui_RenderObjects);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Foliage", &gui_RenderFoliage);
+        ImGui::SameLine();
+        ImGui::Checkbox("Show Debug", &gui_RenderDebug);
 
-    ImGui::Text("This is some useful text.");
+        // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::ColorEdit3("Background color", (float*)&bgCol); // Edit 3 floats representing a color
+        if (ImGui::ColorEdit3("Sun color", (float*)&sun.color)) lm.setLight(objectShader, sun);
+        ImGui::ColorEdit3("Headlight color", (float*)&headlight.color);
+    }
 
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    ImGui::ColorEdit3("clear color", (float*)&bgCol); // Edit 3 floats representing a color
+    if (ImGui::CollapsingHeader("Terrain")) {
+        ImGui::DragInt("Terrain size", &terrainSize, 1, 3, 64);
+        ImGui::DragFloat("Sphere size squared", &sphereSize, 1, 1, 300);
+        ImGui::DragFloat("Sphere Intensity", &sphereIntensity, 0.02, 0, 1);
+        if (ImGui::Button("Generate Terrain")) {
+            generateTerrain(rand());
+        }
+    }
+    if (ImGui::CollapsingHeader("Foliage")) {
+       
+        ImGui::InputText("Texture file path", &gui_FoliageTexturePath);
+        ImGui::SameLine();
+        if (ImGui::Button("Set Texture")) {
+            grassTexture = Model::loadTexture(gui_FoliageTexturePath, 1);
+            std::cout << "Set foliage texure to: " << grassTexture << " at path: " << gui_FoliageTexturePath << std::endl;
+        }
+    }
+    if (ImGui::CollapsingHeader("Player")) {
+        ImGui::SliderFloat("FOV", &fov, 1, 90, "%.1f");
+        ImGui::SliderFloat("Velocity", &gui_CamSpeed, 1, 90, "%.1f");
+    }
 
-    if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-        counter++;
-    ImGui::SameLine();
-    ImGui::Text("counter = %d", counter);
-
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", deltaTime * 1000, 1 / deltaTime);
+    if (ImGui::CollapsingHeader("Windows")) {
+        ImGui::Checkbox("Info", &gui_InfoWindow);
+        ImGui::Checkbox("Demo", &gui_DemoWindow);
+    }
     ImGui::End();
+
+    //additional windows
+    if (gui_InfoWindow) {
+        ImGui::Begin("Info", &gui_InfoWindow, ImGuiWindowFlags_NoCollapse);
+        ImGui::Text("Framerate %.1f FPS (%.1f ms)", 1 / deltaTime, (double)deltaTime * 1000.f);
+        ImGui::Text("Player Position: %.1f, %.1f, %.1f", camPos.x, camPos.y, camPos.z);
+        ImGui::Text("Player Forward: %.1f, %.1f, %.1f", camFront.x, camFront.y, camFront.z);
+        ImGui::End();
+    }
+    if (gui_DemoWindow) {
+        ImGui::ShowDemoWindow(&gui_DemoWindow);
+    }
+
+    
+    
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -233,16 +282,14 @@ void Render() {
         camUp);
 
     
-    projection = projection = glm::perspective(glm::radians(fov), ((float)windowWidth) / windowHeight, 0.1f, 100.0f);
-    RenderObjects();
-    RenderFoliage();
-    //RenderDebug();
+    projection = projection = glm::perspective(glm::radians(fov), ((float)windowWidth) / windowHeight, 0.1f, 300.0f);
+    if(gui_RenderObjects)RenderObjects();
+    if(gui_RenderFoliage)RenderFoliage();
+    if(gui_RenderDebug)RenderDebug();
     RenderImgui();
 
     //update screen
 }
-
-
 
 bool Setup() {
 
@@ -252,6 +299,11 @@ bool Setup() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+    windowHeight = mode->height;
+    windowWidth = mode->width;
     
     //create Window
     window = glfwCreateWindow(windowWidth, windowHeight, "LearnOpenGL", NULL, NULL);
@@ -281,7 +333,6 @@ bool Setup() {
     //define callbacks
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
@@ -312,7 +363,7 @@ bool Setup() {
     foliageShader.setInt("AlphaTexture", 4);
     foliageShader.setInt("BumpTexture", 5);
     foliageShader.setBool("blinn", true);
-    grassTexture = Model::loadTexture("Models/grass3.png", 1);
+    grassTexture = Model::loadTexture(gui_FoliageTexturePath, 1);
     foliageShader.setVec3("AmbientColor", glm::vec3(0.7, 0.6, 0.3));
     foliageShader.setVec3("DiffuseColor", glm::vec3(0.7, 0.6, 0.3));
     foliageShader.setVec3("SpecularColor", glm::vec3(0.45, 0.4, 0.2));
@@ -330,7 +381,7 @@ bool Setup() {
     debugShader = ShaderProgram("Shaders/Debug.vert", "Shaders/Debug.geom", "Shaders/Debug.frag");
     debugShader.use();
     debugShader.setInt("texture1", 0);
-    debugTexture = Model::loadTexture("Models/debug-texture", 1);
+    debugTexture = Model::loadTexture("Models/debug-texture.png", 1);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, debugTexture);
     
@@ -340,17 +391,18 @@ bool Setup() {
     camUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     //setup lights
-    DirLightDir = glm::vec3(0.f, -0.3f, 0.5f);
     sun.dir = glm::vec3(0.f, -0.3f, 0.5f);
-    lm.addLight(sun);
+    sun.color = glm::vec3(0.6f, 0.4f, 0.3f);
+    lm.addLight(&sun);
     headlight.dir = camFront;
     headlight.pos = camPos;
+    headlight.color = glm::vec3(0.6f, 0.6f, 0.6f);
     headlight.constant = 1.f;
     headlight.linear = 0.19f;
     headlight.quadratic = 0.036f;
     headlight.cutOff = glm::cos(glm::radians(12.5f));
     headlight.outerCutOff = glm::cos(glm::radians(17.5f));
-    lm.addLight(headlight);
+    lm.addLight(&headlight);
 
     //set world lights params in shaders
     lm.setLights(objectShader);
@@ -358,6 +410,18 @@ bool Setup() {
 
 
     return true;
+}
+
+void generateTerrain(int seed) {
+    std::cout << "Seed " << seed << std::endl;
+    std::vector<float> noiseOutput(terrainSize * terrainSize * terrainSize);
+    //noiseGenerator.generateSphere(noiseOutput.data(), terrainSize, 50, glm::vec3(0), glm::vec3(terrainSize/2));
+    noiseGenerator.generateSphericalNoise(fnGenerator, noiseOutput.data(), terrainSize, sphereSize, sphereIntensity/100.f, glm::vec3(0), glm::vec3(terrainSize / 2));
+   // noiseGenerator.generateNoise(fnGenerator, noiseOutput.data(), terrainSize);
+    //fnGenerator->GenUniformGrid3D(noiseOutput.data(), 0, 0, 0, terrainSize, terrainSize, terrainSize, 0.01f, seed);
+    dc::Mesh mesh = dc::generateMesh(noiseOutput, terrainSize);
+    if (terrain.active) { terrain.clearModels(); terrain.loadModel(mesh); }
+    else terrain = Model(mesh, "Models/container.jpg");
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -373,7 +437,7 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 
     
-    float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
+    float cameraSpeed = gui_CamSpeed * deltaTime; // adjust accordingly
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
         cameraSpeed *= 2.f;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -402,6 +466,12 @@ void processInput(GLFWwindow* window)
         sun.dir = glm::rotate(glm::mat4(1.f), deltaTime, glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(sun.dir, 1.f);
         lm.setLight(objectShader, sun);
         lm.setLight(foliageShader, sun);
+    }
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 }
 

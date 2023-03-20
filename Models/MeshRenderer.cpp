@@ -61,6 +61,13 @@ void MeshRenderer::draw() const {
     glDrawElements(GL_TRIANGLES, indicesAmt, GL_UNSIGNED_INT, 0);
 }
 
+void MeshRenderer::clearBuffers()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+}
+
 void MeshRenderer::drawInstanced(unsigned int count) const {
     //set vao context
     glBindVertexArray(VAO);

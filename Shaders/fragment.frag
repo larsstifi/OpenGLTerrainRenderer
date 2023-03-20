@@ -29,12 +29,14 @@ uniform vec3 viewPos;
 uniform vec3 DirLightDir;
 struct DirectionalLight {
     vec3 dir;
+    vec3 color;
 };
 uniform DirectionalLight DirectionalLights[5];
 uniform int DirectionalLightAmt = 0;
 
 struct PointLight{
     vec3 pos;
+    vec3 color;
 
     float constant;
     float linear;
@@ -45,6 +47,7 @@ uniform int PointLightAmt = 0;
 struct SpotLight{
     vec3 pos;
     vec3 dir;
+    vec3 color;
     float cutOff;
     float outerCutOff;
 
@@ -81,7 +84,7 @@ vec3 DirLightContr(DirectionalLight dl){
         spec = pow(max(dot(viewDir, reflectDir), 0.0), SpecularExponent);
     }
     vec3 specular = SpecularColor * spec * texture(SpecularTexture, TexCoords).rgb;
-    return vec3(ambient + diffuse + specular);
+    return vec3(ambient + diffuse + specular) * dl.color;
 }
 vec3 PointLightContr(PointLight pl){
     vec3 ambient = 0.05 * AmbientColor * texture(DiffuseTexture, TexCoords).rgb;
@@ -108,7 +111,7 @@ vec3 PointLightContr(PointLight pl){
     float d = length(pl.pos - FragPos);
     float attenuation = 1.0 / (pl.constant + pl.linear * d + 
   			     pl.quadratic * (d * d));
-    return (vec3(ambient + diffuse + specular) * attenuation);
+    return (vec3(ambient + diffuse + specular) * attenuation) * pl.color;
 }
 vec3 SpotLightContr(SpotLight sl){
     vec3 lightDir = normalize((sl.pos)-FragPos);
@@ -138,7 +141,7 @@ vec3 SpotLightContr(SpotLight sl){
     float d = length(sl.pos - FragPos);
     float attenuation = 1.0 / (sl.constant + sl.linear * d + 
   			     sl.quadratic * (d * d));
-    return (vec3(ambient + (diffuse + specular) * intensity) * attenuation);
+    return (vec3(ambient + (diffuse + specular) * intensity) * attenuation) * sl.color;
 }
 
 void main()

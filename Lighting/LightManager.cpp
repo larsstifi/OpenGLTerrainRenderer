@@ -1,35 +1,35 @@
 #include "LightManager.h"
 
-int LightManager::addLight(SpotLight& newLight)
+int LightManager::addLight(SpotLight* newLight)
 {
     if (spotLights.size() >= maxSpotAmt)
         return -1;
 
-    newLight.ID = spotIdTracker.top();
+    newLight->ID = spotIdTracker.top();
     spotIdTracker.pop();
     spotLights.push_back(newLight);
-    return newLight.ID;
+    return newLight->ID;
 }
-int LightManager::addLight(PointLight& newLight)
+int LightManager::addLight(PointLight* newLight)
 {
     
 	if (pointLights.size() >= maxPointAmt)
 		return -1;
 
-    newLight.ID = pointIdTracker.top();
+    newLight->ID = pointIdTracker.top();
     pointIdTracker.pop();
 	pointLights.push_back(newLight);
-    return newLight.ID;
+    return newLight->ID;
 }
-int LightManager::addLight(DirectionalLight& newLight)
+int LightManager::addLight(DirectionalLight * newLight)
 {
     if (directionalLights.size() >= maxDirectionalAmt)
         return -1;
 
-    newLight.ID = directionalIdTracker.top();
+    newLight->ID = directionalIdTracker.top();
     directionalIdTracker.pop();
     directionalLights.push_back(newLight);
-    return newLight.ID;
+    return newLight->ID;
 }
 
 void LightManager::removeLight(int id)
@@ -37,7 +37,7 @@ void LightManager::removeLight(int id)
     if (id < maxSpotAmt) {
         for (int i = 0; i < spotLights.size(); i++)
         {
-            if (spotLights[i].ID == id) {
+            if (spotLights[i]->ID == id) {
                 spotLights.erase(spotLights.begin() + i);
                 break;
             }
@@ -47,7 +47,7 @@ void LightManager::removeLight(int id)
     else if (id < maxSpotAmt + maxPointAmt) {
         for (int i = 0; i < pointLights.size(); i++)
         {
-            if (pointLights[i].ID == id) {
+            if (pointLights[i]->ID == id) {
                 pointLights.erase(pointLights.begin() + i);
                 break;
             }
@@ -57,7 +57,7 @@ void LightManager::removeLight(int id)
     else {
         for (int i = 0; i < directionalLights.size(); i++)
         {
-            if (directionalLights[i].ID == id) {
+            if (directionalLights[i]->ID == id) {
                 directionalLights.erase(directionalLights.begin() + i);
                 break;
             }
@@ -74,15 +74,15 @@ void LightManager::setLights(ShaderProgram& shaderProgram)
     shaderProgram.setInt("DirectionalLightAmt", directionalLights.size());
     for (size_t i = 0; i < directionalLights.size(); i++)
     {
-        setLight(shaderProgram, directionalLights[i]);
+        setLight(shaderProgram, *(directionalLights[i]));
     }
     for (size_t i = 0; i < spotLights.size(); i++)
     {
-        setLight(shaderProgram, spotLights[i]);
+        setLight(shaderProgram, *(spotLights[i]));
     }
     for (size_t i = 0; i < pointLights.size(); i++)
     {
-        setLight(shaderProgram, pointLights[i]);
+        setLight(shaderProgram, *(pointLights[i]));
     }
 }
 
@@ -109,6 +109,7 @@ void LightManager::setLight(ShaderProgram& shaderProgram, SpotLight& light)
     loc += "].";
     shaderProgram.setVec3(loc + "pos", light.pos);
     shaderProgram.setVec3(loc + "dir", light.dir);
+    shaderProgram.setVec3(loc + "color", light.color);
     shaderProgram.setFloat(loc + "constant", light.constant);
     shaderProgram.setFloat(loc + "linear", light.linear);
     shaderProgram.setFloat(loc + "quadratic", light.quadratic);
@@ -122,6 +123,7 @@ void LightManager::setLight(ShaderProgram& shaderProgram, DirectionalLight& ligh
     loc += std::to_string(light.ID - maxSpotAmt - maxPointAmt);
     loc += "].";
     shaderProgram.setVec3(loc + "dir", light.dir);
+    shaderProgram.setVec3(loc + "color", light.color);
 }
 void LightManager::setLight(ShaderProgram& shaderProgram, PointLight& light)
 {
@@ -129,6 +131,7 @@ void LightManager::setLight(ShaderProgram& shaderProgram, PointLight& light)
     loc += std::to_string(light.ID - maxSpotAmt);
     loc += "].";
     shaderProgram.setVec3(loc + "pos", light.pos);
+    shaderProgram.setVec3(loc + "color", light.color);
     shaderProgram.setFloat(loc + "constant", light.constant);
     shaderProgram.setFloat(loc + "linear", light.linear);
     shaderProgram.setFloat(loc + "quadratic", light.quadratic);
@@ -137,8 +140,8 @@ void LightManager::setLight(ShaderProgram& shaderProgram, PointLight& light)
 SpotLight& LightManager::getSpotLight(int id) {
     for (size_t i = 0; i < spotLights.size(); i++)
     {
-        if (spotLights[i].ID == id) {
-            return spotLights[i];
+        if (spotLights[i]->ID == id) {
+            return *(spotLights[i]);
         }
     }
 }
@@ -147,8 +150,8 @@ PointLight& LightManager::getPointLight(int id)
 {
     for (size_t i = 0; i < pointLights.size(); i++)
     {
-        if (pointLights[i].ID == id) {
-            return pointLights[i];
+        if (pointLights[i]->ID == id) {
+            return *(pointLights[i]);
         }
     }
 }
@@ -157,8 +160,8 @@ DirectionalLight& LightManager::getDirectionalLight(int id)
 {
     for (size_t i = 0; i < directionalLights.size(); i++)
     {
-        if (directionalLights[i].ID == id) {
-            return directionalLights[i];
+        if (directionalLights[i]->ID == id) {
+            return *(directionalLights[i]);
         }
     }
 }

@@ -28,6 +28,7 @@ private:
 	unsigned int texture;
 public:
 	void draw() const;
+	void clearBuffers();
 	void drawInstanced(unsigned int count) const;
 	void fillBuffers(std::vector<objl::Vertex>& vert, std::vector<unsigned int>& indi);
 	void fillBuffers(std::vector<dc::Vertex>& vert, std::vector<unsigned int>& indi);

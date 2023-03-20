@@ -8,12 +8,14 @@
 struct DirectionalLight {
     int ID;
     glm::vec3 dir;
+    glm::vec3 color;
 };
 
 struct SpotLight {
     int ID;
     glm::vec3 pos;
     glm::vec3 dir;
+    glm::vec3 color;
     float cutOff;
     float outerCutOff;
 
@@ -25,6 +27,7 @@ struct SpotLight {
 struct PointLight {
     int ID;
     glm::vec3 pos;
+    glm::vec3 color;
 
     float constant;
     float linear;
@@ -33,9 +36,9 @@ struct PointLight {
 
 class LightManager {
 	unsigned int maxSpotAmt, maxPointAmt, maxDirectionalAmt;
-    std::vector<DirectionalLight> directionalLights;
-    std::vector<PointLight> pointLights;
-    std::vector<SpotLight> spotLights;
+    std::vector<DirectionalLight *> directionalLights;
+    std::vector<PointLight *> pointLights;
+    std::vector<SpotLight *> spotLights;
 public:
 	LightManager(unsigned int maxSpotAmt, unsigned int maxPointAmt, unsigned int maxDirectionalAmt) {
 		this->maxSpotAmt = maxSpotAmt;
@@ -55,9 +58,9 @@ public:
             directionalIdTracker.push(maxDirectionalAmt - i - 1 + maxSpotAmt + maxPointAmt);
         }
 	};
-    int addLight(SpotLight& newLight);
-    int addLight(PointLight& newLight);
-    int addLight(DirectionalLight& newLight);
+    int addLight(SpotLight * newLight);
+    int addLight(PointLight * newLight);
+    int addLight(DirectionalLight * newLight);
 
     void removeLight(int id);
 

@@ -25,21 +25,26 @@ struct Material {
 class Model
 {
 public:
+    bool active = false;
     Model() {};
     Model(const char* path, const char* pathDefaultTexture)
     {
         setDefaultTexture(pathDefaultTexture);
         loadModel(path);
+        active = true;
     }
     Model(dc::Mesh& mesh, const char* pathDefaultTexture)
     {
         setDefaultTexture(pathDefaultTexture);
         loadModel(mesh);
+        active = true;
     }
     void setDefaultTexture(const char* filePath);
     void draw(ShaderProgram& shader, glm::mat4& model, bool setMat = true);
     void drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat = true);
     static unsigned int loadTexture(std::string filePath, int mode = 0);
+    void loadModel(dc::Mesh& mesh);
+    void clearModels();
 private:
     // model data
     std::vector<MeshRenderer> meshes;
@@ -48,5 +53,4 @@ private:
     std::vector<unsigned int> matIndices;
 
     void loadModel(std::string path);
-    void loadModel(dc::Mesh& mesh);
 };
