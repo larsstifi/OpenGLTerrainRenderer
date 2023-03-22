@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <Shaders/ShaderProgram.h>
-#include "DualContouring.h"
+#include <Terrain/DualContouring.h>
 
 #include <iostream>
 #include <fstream>

@@ -2,7 +2,8 @@
 #include <Shaders\ShaderProgram.h>
 #include <Models\MeshRenderer.h>
 #include <Models\OBJ_Loader.h>
-#include "DualContouring.h"
+#include <Terrain/DualContouring.h>
+#include <Models/Drawable.h>
 
 struct Material {
     std::string name;
@@ -22,7 +23,7 @@ struct Material {
 
 };
 
-class Model
+class Model : public Drawable
 {
 public:
     bool active = false;

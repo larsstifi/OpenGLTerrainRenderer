@@ -10,6 +10,7 @@
 #include <Models/Model.h>
 #include <Lighting/LightManager.h>
 #include <Terrain/NoiseGenerator.h>
+#include <Terrain/TerrainChunk.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
@@ -46,9 +47,9 @@ ShaderProgram objectShader;
 ShaderProgram foliageShader;
 ShaderProgram debugShader;
 
-
-Model terrain; 
-std::vector<Model *> objects;
+ 
+TerrainChunk t;
+std::vector<Drawable *> objects;
 
 glm::vec3 positions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f),
@@ -77,6 +78,7 @@ float lastFrame = 0.0f; // Time of last frame
 
 
 int terrainSize = 32;
+int terrainSeed = 0;
 float sphereSize = 100;
 float sphereIntensity = 0.5f;
 FastNoise::SmartNode<> fnGenerator;
@@ -99,14 +101,17 @@ int main()
     }
     Model m("Models/Tree/tree low.obj", "Models/Solid_white.jpg");
     objects.push_back(&m);
-    fnGenerator = FastNoise::NewFromEncodedNodeTree("DQAFAAAAAAAAQAgAAAAAAD8AAAAAAA==");
-    generateTerrain(rand());
-    objects.push_back(&terrain);
+
+    t.generateChunk(noiseGenerator, terrainSize, terrainSeed);
+    t.setMat(Model::loadTexture("Models/Solid_white.jpg"));
+    objects.push_back(&t);
+
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
         //std::cout << "FPS: " << 1 / deltaTime << std::endl;
         // input
         // -----
@@ -225,11 +230,12 @@ void RenderImgui() {
     }
 
     if (ImGui::CollapsingHeader("Terrain")) {
-        ImGui::DragInt("Terrain size", &terrainSize, 1, 3, 64);
-        ImGui::DragFloat("Sphere size squared", &sphereSize, 1, 1, 300);
-        ImGui::DragFloat("Sphere Intensity", &sphereIntensity, 0.02, 0, 1);
+        ImGui::SliderInt("Terrain size", &terrainSize, 3, 64, "%d")
+        ImGui::SliderInt("Terrain seed", &terrainSeed, 0, 1000, "%d");
+        ImGui::SliderFloat("Sphere size squared", &sphereSize, 1, 300, "%.1f");
+        ImGui::SliderFloat("Sphere Intensity", &sphereIntensity, 0, 1);
         if (ImGui::Button("Generate Terrain")) {
-            generateTerrain(rand());
+            t.generateChunk(noiseGenerator, terrainSize, terrainSeed);
         }
     }
     if (ImGui::CollapsingHeader("Foliage")) {
@@ -410,18 +416,6 @@ bool Setup() {
 
 
     return true;
-}
-
-void generateTerrain(int seed) {
-    std::cout << "Seed " << seed << std::endl;
-    std::vector<float> noiseOutput(terrainSize * terrainSize * terrainSize);
-    //noiseGenerator.generateSphere(noiseOutput.data(), terrainSize, 50, glm::vec3(0), glm::vec3(terrainSize/2));
-    noiseGenerator.generateSphericalNoise(fnGenerator, noiseOutput.data(), terrainSize, sphereSize, sphereIntensity/100.f, glm::vec3(0), glm::vec3(terrainSize / 2));
-   // noiseGenerator.generateNoise(fnGenerator, noiseOutput.data(), terrainSize);
-    //fnGenerator->GenUniformGrid3D(noiseOutput.data(), 0, 0, 0, terrainSize, terrainSize, terrainSize, 0.01f, seed);
-    dc::Mesh mesh = dc::generateMesh(noiseOutput, terrainSize);
-    if (terrain.active) { terrain.clearModels(); terrain.loadModel(mesh); }
-    else terrain = Model(mesh, "Models/container.jpg");
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

@@ -33,9 +33,6 @@
     <ClCompile Include="Lighting\LightManager.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="Models\DualContouring.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="imgui\imgui.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
@@ -63,6 +60,12 @@
     <ClCompile Include="Terrain\NoiseGenerator.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="Terrain\DualContouring.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="Terrain\TerrainChunk.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -81,9 +84,6 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="Lighting\LightManager.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="Models\DualContouring.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imconfig.h">
@@ -117,6 +117,15 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="Terrain\NoiseGenerator.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\Drawable.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="Terrain\DualContouring.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="Terrain\TerrainChunk.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
