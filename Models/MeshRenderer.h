@@ -25,7 +25,6 @@ private:
 	unsigned int VBO;
 	unsigned int EBO;
 	unsigned int indicesAmt;
-	unsigned int texture;
 public:
 	void draw() const;
 	void clearBuffers();

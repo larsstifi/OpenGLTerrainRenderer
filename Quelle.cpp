@@ -11,6 +11,7 @@
 #include <Lighting/LightManager.h>
 #include <Terrain/NoiseGenerator.h>
 #include <Terrain/TerrainChunk.h>
+#include <Terrain/Octree.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
@@ -99,6 +100,10 @@ int main()
     if (!Setup()) {
         return -1;
     }
+    Octree octree;
+    octree.setDepth(4);
+    octree.getActiveNodes(glm::vec3(0), 0.01);
+
     Model m("Models/Tree/tree low.obj", "Models/Solid_white.jpg");
     objects.push_back(&m);
 
@@ -230,7 +235,7 @@ void RenderImgui() {
     }
 
     if (ImGui::CollapsingHeader("Terrain")) {
-        ImGui::SliderInt("Terrain size", &terrainSize, 3, 64, "%d")
+        ImGui::SliderInt("Terrain size", &terrainSize, 3, 64, "%d");
         ImGui::SliderInt("Terrain seed", &terrainSeed, 0, 1000, "%d");
         ImGui::SliderFloat("Sphere size squared", &sphereSize, 1, 300, "%.1f");
         ImGui::SliderFloat("Sphere Intensity", &sphereIntensity, 0, 1);

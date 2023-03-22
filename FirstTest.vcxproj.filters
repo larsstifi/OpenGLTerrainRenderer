@@ -66,6 +66,9 @@
     <ClCompile Include="Terrain\TerrainChunk.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="Terrain\Octree.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -126,6 +129,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="Terrain\TerrainChunk.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="Terrain\Octree.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
