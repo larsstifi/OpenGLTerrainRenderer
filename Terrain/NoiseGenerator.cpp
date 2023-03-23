@@ -1,15 +1,15 @@
 #include<Terrain/NoiseGenerator.h>
 
-void NoiseGenerator::generateNoise(float* noiseOutput, int terrainSize, glm::vec3 noisePos, int seed) {
+void NoiseGenerator::generateNoise(float* noiseOutput, int terrainSize, glm::vec3 noisePos, float freq, float scale, int seed) {
 
-	
-	fnGenerator->GenUniformGrid3D(noiseOutput, noisePos.x, noisePos.y, noisePos.z, terrainSize, terrainSize, terrainSize, 0.01f, seed);
+	fnScale->SetScale(scale);
+	fnGenerator->GenUniformGrid3D(noiseOutput, noisePos.x, noisePos.y, noisePos.z, terrainSize, terrainSize, terrainSize, freq, seed);
 
 	
 }
 void NoiseGenerator::generateSphericalNoise(float* noiseOutput, int terrainSize, float sphereRadiusSquared, float sphereIntensity, glm::vec3 noisePos, glm::vec3 sphereCenter, int seed)
 {
-	generateNoise(noiseOutput, terrainSize, noisePos, seed);
+	generateNoise(noiseOutput, terrainSize, noisePos, 0.2f, 1.f, seed);
 	generateSphere(noiseOutput, terrainSize, sphereRadiusSquared,sphereIntensity, noisePos, sphereCenter);
 }
 void NoiseGenerator::generateSphere(float* output, int terrainSize, float sphereRadiusSquared, float sphereIntensity, glm::vec3 noisePos, glm::vec3 sphereCenter) {

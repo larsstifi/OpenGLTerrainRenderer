@@ -26,7 +26,6 @@
 bool Setup();
 void Render();
 void RenderImgui();
-void generateTerrain(int seed);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -50,6 +49,7 @@ ShaderProgram debugShader;
 
  
 TerrainChunk t;
+Octree octree;
 std::vector<Drawable *> objects;
 
 glm::vec3 positions[] = {
@@ -91,7 +91,7 @@ bool gui_RenderFoliage = false;
 bool gui_RenderObjects = true;
 bool gui_InfoWindow = true;
 bool gui_DemoWindow = false;
-float gui_CamSpeed = 2.5f;
+float gui_CamSpeed = 25.f;
 std::string gui_FoliageTexturePath{ "Models/grass3.png" };
 
 int main()
@@ -100,22 +100,26 @@ int main()
     if (!Setup()) {
         return -1;
     }
-    Octree octree;
-    octree.setDepth(4);
-    octree.getActiveNodes(glm::vec3(0), 0.01);
+
+    octree.setDepth(5);
+    octree.setTexture(Model::loadTexture("Models/Solid_white.jpg"));
+    objects.push_back(&octree);
+    
 
     Model m("Models/Tree/tree low.obj", "Models/Solid_white.jpg");
     objects.push_back(&m);
 
-    t.generateChunk(noiseGenerator, terrainSize, terrainSeed);
+    t.generateChunk(noiseGenerator, terrainSize, 0.2f, terrainSeed);
     t.setMat(Model::loadTexture("Models/Solid_white.jpg"));
-    objects.push_back(&t);
+    //objects.push_back(&t);
 
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+        octree.playerPos = camPos;
+
 
         //std::cout << "FPS: " << 1 / deltaTime << std::endl;
         // input
@@ -239,8 +243,11 @@ void RenderImgui() {
         ImGui::SliderInt("Terrain seed", &terrainSeed, 0, 1000, "%d");
         ImGui::SliderFloat("Sphere size squared", &sphereSize, 1, 300, "%.1f");
         ImGui::SliderFloat("Sphere Intensity", &sphereIntensity, 0, 1);
+
+        ImGui::SliderFloat("LOD Falloff", &octree.LOD_Falloff, 0, 2, "%.2f");
+        ImGui::InputFloat3("Octree Position", (float*)&octree.octreePos);
         if (ImGui::Button("Generate Terrain")) {
-            t.generateChunk(noiseGenerator, terrainSize, terrainSeed);
+            t.generateChunk(noiseGenerator, terrainSize, 0.2f, terrainSeed);
         }
     }
     if (ImGui::CollapsingHeader("Foliage")) {
@@ -263,6 +270,11 @@ void RenderImgui() {
     }
     ImGui::End();
 
+    ImGui::Begin("Console Out");
+    if (ImGui::Button("Hello")) octree.gui_Cout.append("Hello\n");
+    ImGui::TextUnformatted(octree.gui_Cout.begin());
+    ImGui::SetScrollHereY(1.0f);
+    ImGui::End();
     //additional windows
     if (gui_InfoWindow) {
         ImGui::Begin("Info", &gui_InfoWindow, ImGuiWindowFlags_NoCollapse);

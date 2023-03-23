@@ -8,6 +8,7 @@ void TerrainChunk::setMat(unsigned int texture) {
 	mat.AmbientTexture = texture;
 	mat.DiffuseTexture = texture;
 	mat.SpecularTexture = texture;
+	mat.AlphaTexture = texture;
 }
 
 void TerrainChunk::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
@@ -61,10 +62,19 @@ void TerrainChunk::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsign
 	meshRenderer.drawInstanced(count);
 }
 
-void TerrainChunk::generateChunk(NoiseGenerator ng, unsigned int size, int seed) {
-	std::vector<float> noiseOutput(size * size * size);
-	ng.generateNoise(noiseOutput.data(), size, pos, seed);
-	mesh = dc::generateMesh(noiseOutput, size);
+void TerrainChunk::generateChunk(NoiseGenerator ng, unsigned int size, float freq, float scale, int seed) {
+	unsigned int noiseSize = size + 2;
+	std::vector<float> noiseOutput(noiseSize * noiseSize * noiseSize);
+	ng.generateNoise(noiseOutput.data(), noiseSize, pos / scale, freq, scale, seed);
+	mesh = dc::generateMesh(noiseOutput, noiseSize);
 	meshRenderer.clearBuffers();
-	meshRenderer.fillBuffers(mesh.vertices, mesh.indices);
+	if (mesh.indices.size() > 0) {
+		meshRenderer.fillBuffers(mesh.vertices, mesh.indices);
+	}
+	
+}
+
+void TerrainChunk::clear()
+{
+	meshRenderer.clearBuffers();
 }
