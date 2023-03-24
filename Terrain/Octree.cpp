@@ -12,7 +12,25 @@ static glm::ivec3 ChildrenPos[8]{
 
 };
 
+int executeGeneration(TerrainChunk* tc, NoiseGenerator ng, int size, float freq, float scale, int seed) {
+	tc->generateChunk(ng, size, freq, scale, seed);
+	return 0;
+}
+
 void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
+	//first we fill the buffers of the terrainchunks created in the last loop
+	int size = terrainGenerationThreads.size();
+	for (size_t i = 0; i < size; i++)
+	{
+		std::pair<std::thread*, TerrainChunk*> pair = terrainGenerationThreads.front(); terrainGenerationThreads.pop_front();
+		std::thread* curThread = pair.first;
+		TerrainChunk* curTC = pair.second;
+		curThread->join();
+		delete curThread;
+		curTC->fillBuffers();
+	}
+
+
 	unsigned int CreatedChunksAmt = 0;
 	bool childNotCreated = false;
 	std::stack<OctreeNode*> stack; //keep track of Nodes and how many children we already iterated over
@@ -37,27 +55,31 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 		//check if last node or below target depth, if so add this node and move up in tree          only check if this is the first iteration
 		bool isActive = (currentIteration == 0 && (int)curDepth <= targetDepth) || curDepth == 0;
 		if (isActive && !(curNode->tcSet)) {
-				if (CreatedChunksAmt == MAX_CHUNKS_PER_FRAME) {
-					//move up a level in LOD
-					childNotCreated = true;
-					stack.pop();
-					iterationStack.pop();
-					childrenIndexStack.pop();
-					curDepth++;
-					curPos -= ChildrenPos[curChildIndex] * (1 << (curDepth - 1));
-					continue;
+				if (CreatedChunksAmt < MAX_CHUNKS_PER_FRAME) {
+					TerrainChunk* newTC;
+					newTC = new TerrainChunk();
+					newTC->pos = glm::vec3(curPos * chunkSize) + octreePos;
+					//std::thread* newThread = new std::thread(*newTC, ng, chunkSize, 0.01f, (float)(1 << curDepth), 0);
+					std::thread* newThread = new std::thread(executeGeneration, newTC , ng, chunkSize, 0.01f, (float)(1 << curDepth), 0);
+					terrainGenerationThreads.push_back(std::pair<std::thread*, TerrainChunk*>(newThread, newTC));
+					newTC->setMat(texture);
+					curNode->tc = newTC;
+					curNode->tcSet = true;
+					gui_Cout.appendf("New Chunk at: %.0f %.0f %.0f\n", newTC->pos.x, newTC->pos.y, newTC->pos.z);
+					CreatedChunksAmt++;
 				}
 				
-				TerrainChunk* newTC;
-				newTC = new TerrainChunk();
-				newTC->pos = glm::vec3(curPos * chunkSize) + octreePos;
-				newTC->generateChunk(ng, chunkSize, 0.01f, (1 << curDepth));
-				newTC->setMat(texture);
-				curNode->tc = newTC;
-				curNode->tcSet = true;
-				gui_Cout.appendf("New Chunk at: %.0f %.0f %.0f\n", newTC->pos.x, newTC->pos.y, newTC->pos.z);
-				CreatedChunksAmt++;
-				clearChildren(curNode);
+
+				//clearChildren(curNode);
+
+				//move up a level in LOD
+				childNotCreated = true;
+				stack.pop();
+				iterationStack.pop();
+				childrenIndexStack.pop();
+				curDepth++;
+				curPos -= ChildrenPos[curChildIndex] * (1 << (curDepth - 1));
+				continue;
 		}
 		if (isActive || (childNotCreated && curNode->tcSet)) {
 			//draw node

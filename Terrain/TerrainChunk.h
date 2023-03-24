@@ -21,5 +21,6 @@ public:
 	void draw(ShaderProgram& shader, glm::mat4& model, bool setMat = true);
 	void drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat = true);
     void generateChunk(NoiseGenerator ng, unsigned int size, float freq = 0.2f, float scale = 1.f, int seed = 0);
+    void fillBuffers();
     void clear();
 };

@@ -67,11 +67,12 @@ void TerrainChunk::generateChunk(NoiseGenerator ng, unsigned int size, float fre
 	std::vector<float> noiseOutput(noiseSize * noiseSize * noiseSize);
 	ng.generateNoise(noiseOutput.data(), noiseSize, pos / scale, freq, scale, seed);
 	mesh = dc::generateMesh(noiseOutput, noiseSize);
-	meshRenderer.clearBuffers();
-	if (mesh.indices.size() > 0) {
-		meshRenderer.fillBuffers(mesh.vertices, mesh.indices);
-	}
 	
+}
+void TerrainChunk::fillBuffers() {
+	meshRenderer.clearBuffers();
+	if (mesh.indices.size() > 0) 
+		meshRenderer.fillBuffers(mesh.vertices, mesh.indices);
 }
 
 void TerrainChunk::clear()
