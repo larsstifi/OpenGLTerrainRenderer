@@ -50,7 +50,7 @@ Mesh dc::generateMesh(std::vector<float>& density, unsigned int gridSize)
 					vertPos += startpos + dir * 0.5f ;
 				}
 				vertPos /= signedEdges.size();
-				vertPos += +glm::vec3(curCellPos);
+				vertPos += glm::vec3(curCellPos) - glm::vec3(-0.5f);
 
 				glm::vec3 norm(0.f); //calculate the norm by sampling density at corners
 				for (int x = 0; x < 8; x++) {

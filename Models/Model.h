@@ -7,13 +7,13 @@
 
 struct Material {
     std::string name;
-    glm::vec3 AmbientColor;
-    glm::vec3 DiffuseColor;
-    glm::vec3 SpecularColor;
-    float SpecularExponent;
-    float OpticalDensity;
-    float Dissolve;
-    int Illumination;
+    glm::vec3 AmbientColor = glm::vec3(1.f);
+    glm::vec3 DiffuseColor = glm::vec3(1.f);
+    glm::vec3 SpecularColor = glm::vec3(1.f);
+    float SpecularExponent = 1.f;
+    float OpticalDensity = 1.f;
+    float Dissolve = 0.f;
+    int Illumination = 0;
     unsigned int AmbientTexture = 0;
     unsigned int DiffuseTexture = 0;
     unsigned int SpecularTexture= 0;

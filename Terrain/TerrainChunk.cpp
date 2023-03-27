@@ -70,7 +70,6 @@ void TerrainChunk::generateChunk(NoiseGenerator ng, unsigned int size, float fre
 	
 }
 void TerrainChunk::fillBuffers() {
-	meshRenderer.clearBuffers();
 	if (mesh.indices.size() > 0) 
 		meshRenderer.fillBuffers(mesh.vertices, mesh.indices);
 }

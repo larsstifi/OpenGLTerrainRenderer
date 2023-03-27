@@ -1,6 +1,6 @@
 #include "LightManager.h"
 
-int LightManager::addLight(SpotLight* newLight)
+int LightManager::addLight(std::shared_ptr<SpotLight> newLight)
 {
     if (spotLights.size() >= maxSpotAmt)
         return -1;
@@ -10,7 +10,7 @@ int LightManager::addLight(SpotLight* newLight)
     spotLights.push_back(newLight);
     return newLight->ID;
 }
-int LightManager::addLight(PointLight* newLight)
+int LightManager::addLight(std::shared_ptr<PointLight> newLight)
 {
     
 	if (pointLights.size() >= maxPointAmt)
@@ -21,7 +21,7 @@ int LightManager::addLight(PointLight* newLight)
 	pointLights.push_back(newLight);
     return newLight->ID;
 }
-int LightManager::addLight(DirectionalLight * newLight)
+int LightManager::addLight(std::shared_ptr<DirectionalLight> newLight)
 {
     if (directionalLights.size() >= maxDirectionalAmt)
         return -1;
@@ -92,14 +92,14 @@ void LightManager::setLight(ShaderProgram& shaderProgram, int id)
     shaderProgram.setInt("PointLightAmt", maxPointAmt);
     shaderProgram.setInt("DirectionalLightAmt", maxDirectionalAmt);
     if (id < maxSpotAmt) {
-        setLight(shaderProgram, getSpotLight(id));
+        setLight(shaderProgram, *getSpotLight(id));
         return;
     }
     if (id < maxPointAmt) {
-        setLight(shaderProgram, getPointLight(id));
+        setLight(shaderProgram, *getPointLight(id));
         return;
     }
-    setLight(shaderProgram, getDirectionalLight(id));
+    setLight(shaderProgram, *getDirectionalLight(id));
 }
 
 void LightManager::setLight(ShaderProgram& shaderProgram, SpotLight& light)
@@ -137,31 +137,31 @@ void LightManager::setLight(ShaderProgram& shaderProgram, PointLight& light)
     shaderProgram.setFloat(loc + "quadratic", light.quadratic);
 }
 
-SpotLight& LightManager::getSpotLight(int id) {
+std::shared_ptr<SpotLight> LightManager::getSpotLight(int id) {
     for (size_t i = 0; i < spotLights.size(); i++)
     {
         if (spotLights[i]->ID == id) {
-            return *(spotLights[i]);
+            return spotLights[i];
         }
     }
 }
 
-PointLight& LightManager::getPointLight(int id)
+std::shared_ptr<PointLight> LightManager::getPointLight(int id)
 {
     for (size_t i = 0; i < pointLights.size(); i++)
     {
         if (pointLights[i]->ID == id) {
-            return *(pointLights[i]);
+            return (pointLights[i]);
         }
     }
 }
 
-DirectionalLight& LightManager::getDirectionalLight(int id)
+std::shared_ptr<DirectionalLight> LightManager::getDirectionalLight(int id)
 {
     for (size_t i = 0; i < directionalLights.size(); i++)
     {
         if (directionalLights[i]->ID == id) {
-            return *(directionalLights[i]);
+            return directionalLights[i];
         }
     }
 }

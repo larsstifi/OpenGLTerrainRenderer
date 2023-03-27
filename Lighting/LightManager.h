@@ -36,9 +36,9 @@ struct PointLight {
 
 class LightManager {
 	unsigned int maxSpotAmt, maxPointAmt, maxDirectionalAmt;
-    std::vector<DirectionalLight *> directionalLights;
-    std::vector<PointLight *> pointLights;
-    std::vector<SpotLight *> spotLights;
+    std::vector<std::shared_ptr<DirectionalLight>> directionalLights;
+    std::vector<std::shared_ptr<PointLight>> pointLights;
+    std::vector<std::shared_ptr<SpotLight>> spotLights;
 public:
 	LightManager(unsigned int maxSpotAmt, unsigned int maxPointAmt, unsigned int maxDirectionalAmt) {
 		this->maxSpotAmt = maxSpotAmt;
@@ -58,9 +58,9 @@ public:
             directionalIdTracker.push(maxDirectionalAmt - i - 1 + maxSpotAmt + maxPointAmt);
         }
 	};
-    int addLight(SpotLight * newLight);
-    int addLight(PointLight * newLight);
-    int addLight(DirectionalLight * newLight);
+    int addLight(std::shared_ptr<SpotLight> newLight);
+    int addLight(std::shared_ptr<PointLight> newLight);
+    int addLight(std::shared_ptr<DirectionalLight> newLight);
 
     void removeLight(int id);
 
@@ -72,7 +72,7 @@ public:
 private:
     std::stack<int> directionalIdTracker, pointIdTracker, spotIdTracker;
     
-    SpotLight& getSpotLight(int id);
-    PointLight& getPointLight(int id);
-    DirectionalLight& getDirectionalLight(int id);
+    std::shared_ptr<SpotLight> getSpotLight(int id);
+    std::shared_ptr<PointLight> getPointLight(int id);
+    std::shared_ptr<DirectionalLight> getDirectionalLight(int id);
 };

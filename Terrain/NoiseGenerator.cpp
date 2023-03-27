@@ -1,9 +1,11 @@
 #include<Terrain/NoiseGenerator.h>
 
 void NoiseGenerator::generateNoise(float* noiseOutput, int terrainSize, glm::vec3 noisePos, float freq, float scale, int seed) {
-
+	fnOffset->SetOffset<FastNoise::Dim::X>(noisePos.x);
+	fnOffset->SetOffset<FastNoise::Dim::Y>(noisePos.y);
+	fnOffset->SetOffset<FastNoise::Dim::Z>(noisePos.z);
 	fnScale->SetScale(scale);
-	fnGenerator->GenUniformGrid3D(noiseOutput, noisePos.x, noisePos.y, noisePos.z, terrainSize, terrainSize, terrainSize, freq, seed);
+	fnGenerator->GenUniformGrid3D(noiseOutput, lroundf(noisePos.x), lroundf(noisePos.y), lroundf(noisePos.z), terrainSize, terrainSize, terrainSize, freq, seed);
 
 	
 }

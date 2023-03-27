@@ -17,12 +17,14 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <memory>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <FastNoise/FastNoise.h>
+#include <Models/Renderer.h>
 bool Setup();
 void Render();
 void RenderImgui();
@@ -47,18 +49,21 @@ ShaderProgram objectShader;
 ShaderProgram foliageShader;
 ShaderProgram debugShader;
 
+Renderer* renderer;
+std::shared_ptr<ShaderProgram> sp;
+
  
 TerrainChunk t;
-Octree octree;
-std::vector<Drawable *> objects;
+std::shared_ptr<Octree> octree;
+std::vector<std::shared_ptr<Drawable>> objects;
 
 glm::vec3 positions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f),
 };
 
 ShaderProgram lightingShader;
-DirectionalLight sun;
-SpotLight headlight;
+std::shared_ptr<DirectionalLight> sun;
+std::shared_ptr <SpotLight> headlight;
 LightManager lm(5, 5, 5);
 
 float fov = 45.f;
@@ -92,33 +97,42 @@ bool gui_RenderObjects = true;
 bool gui_InfoWindow = true;
 bool gui_DemoWindow = false;
 float gui_CamSpeed = 25.f;
+bool gui_TerrainUpdatePlayerPos = true;
 std::string gui_FoliageTexturePath{ "Models/grass3.png" };
 
 int main()
 {
-
+    //TODO fix renderer to use materials correctly, clean up Model, moveImgui, add foliage and debug to renderer
     if (!Setup()) {
         return -1;
     }
-
-    octree.setDepth(5);
-    octree.setTexture(Model::loadTexture("Models/Solid_white.jpg"));
-    objects.push_back(&octree);
     
+    renderer = new Renderer(sp);
 
-    Model m("Models/Tree/tree low.obj", "Models/Solid_white.jpg");
-    objects.push_back(&m);
+    std::shared_ptr<RenderMaterial> mat = std::make_shared<RenderMaterial>();
+    mat->DiffuseTexture = Model::loadTexture("Models/Solid_white.jpg");
+    mat->AmbientTexture = Model::loadTexture("Models/Solid_white.jpg");
+    mat->SpecularTexture = Model::loadTexture("Models/Solid_white.jpg");
+    mat->AlphaTexture = Model::loadTexture("Models/Solid_white.jpg");
 
-    t.generateChunk(noiseGenerator, terrainSize, 0.2f, terrainSeed);
-    t.setMat(Model::loadTexture("Models/Solid_white.jpg"));
-    //objects.push_back(&t);
+    uint32_t matIndex = renderer->addMaterial(mat);
+
+    octree = std::shared_ptr<Octree>(new Octree());
+    octree->setDepth(5);
+    octree->setTexture(Model::loadTexture("Terrain/seamless-grass.jpg"));
+    //objects.push_back(octree);
+
+    renderer->addObject(octree, matIndex);
+
+    std::shared_ptr<Model> m(new Model("Models/Tree/tree low.obj", "Models/Solid_white.jpg"));
+    objects.push_back(m);
 
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        octree.playerPos = camPos;
+        if(gui_TerrainUpdatePlayerPos) octree->playerPos = camPos;
 
 
         //std::cout << "FPS: " << 1 / deltaTime << std::endl;
@@ -129,6 +143,11 @@ int main()
         // render
         // ------
         Render();
+        renderer->view = view;
+        renderer->camPos = camPos;
+        renderer->projection = projection;
+
+        renderer->Render();
 
         glfwSwapBuffers(window);
         // glfw: poll IO events (keys pressed/released, mouse moved etc.)
@@ -150,9 +169,9 @@ void RenderObjects() {
 
 
     //set headlightlight positions
-    headlight.pos = camPos;
-    headlight.dir = camFront;
-    lm.setLight(objectShader, headlight);
+    headlight->pos = camPos;
+    headlight->dir = camFront;
+    lm.setLight(objectShader, *headlight);
 
 
     //render each object
@@ -173,7 +192,7 @@ void RenderFoliage() {
     foliageShader.setVec3("viewPos", camPos);
     foliageShader.setFloat("dt", (float)glfwGetTime());
     //set headlightlight positions
-    lm.setLight(foliageShader, headlight);
+    lm.setLight(foliageShader, *headlight);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, grassTexture);
     glActiveTexture(GL_TEXTURE1);
@@ -234,8 +253,8 @@ void RenderImgui() {
 
         // Edit 1 float using a slider from 0.0f to 1.0f
         ImGui::ColorEdit3("Background color", (float*)&bgCol); // Edit 3 floats representing a color
-        if (ImGui::ColorEdit3("Sun color", (float*)&sun.color)) lm.setLight(objectShader, sun);
-        ImGui::ColorEdit3("Headlight color", (float*)&headlight.color);
+        if (ImGui::ColorEdit3("Sun color", (float*)&sun->color)) lm.setLight(objectShader, *sun);
+        ImGui::ColorEdit3("Headlight color", (float*)&headlight->color);
     }
 
     if (ImGui::CollapsingHeader("Terrain")) {
@@ -244,11 +263,9 @@ void RenderImgui() {
         ImGui::SliderFloat("Sphere size squared", &sphereSize, 1, 300, "%.1f");
         ImGui::SliderFloat("Sphere Intensity", &sphereIntensity, 0, 1);
 
-        ImGui::SliderFloat("LOD Falloff", &octree.LOD_Falloff, 0, 2, "%.2f");
-        ImGui::InputFloat3("Octree Position", (float*)&octree.octreePos);
-        if (ImGui::Button("Generate Terrain")) {
-            t.generateChunk(noiseGenerator, terrainSize, 0.2f, terrainSeed);
-        }
+        ImGui::SliderFloat("LOD Falloff", &octree->LOD_Falloff, 0, 2, "%.2f");
+        ImGui::InputFloat3("Octree Position", (float*)&octree->octreePos);
+        ImGui::Checkbox("Update Player Position", &gui_TerrainUpdatePlayerPos);
     }
     if (ImGui::CollapsingHeader("Foliage")) {
        
@@ -271,8 +288,8 @@ void RenderImgui() {
     ImGui::End();
 
     ImGui::Begin("Console Out");
-    if (ImGui::Button("Hello")) octree.gui_Cout.append("Hello\n");
-    ImGui::TextUnformatted(octree.gui_Cout.begin());
+    if (ImGui::Button("Hello")) octree->gui_Cout.append("Hello\n");
+    ImGui::TextUnformatted(octree->gui_Cout.begin());
     ImGui::SetScrollHereY(1.0f);
     ImGui::End();
     //additional windows
@@ -305,7 +322,7 @@ void Render() {
         camUp);
 
     
-    projection = projection = glm::perspective(glm::radians(fov), ((float)windowWidth) / windowHeight, 0.1f, 300.0f);
+    projection = glm::perspective(glm::radians(fov), ((float)windowWidth) / windowHeight, 0.1f, 1000.f);
     if(gui_RenderObjects)RenderObjects();
     if(gui_RenderFoliage)RenderFoliage();
     if(gui_RenderDebug)RenderDebug();
@@ -407,6 +424,9 @@ bool Setup() {
     debugTexture = Model::loadTexture("Models/debug-texture.png", 1);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, debugTexture);
+
+
+    sp = std::make_shared<ShaderProgram>(vertexShaderPath, fragmentShaderPath);
     
     //setup cam position
     camPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -414,22 +434,25 @@ bool Setup() {
     camUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     //setup lights
-    sun.dir = glm::vec3(0.f, -0.3f, 0.5f);
-    sun.color = glm::vec3(0.6f, 0.4f, 0.3f);
-    lm.addLight(&sun);
-    headlight.dir = camFront;
-    headlight.pos = camPos;
-    headlight.color = glm::vec3(0.6f, 0.6f, 0.6f);
-    headlight.constant = 1.f;
-    headlight.linear = 0.19f;
-    headlight.quadratic = 0.036f;
-    headlight.cutOff = glm::cos(glm::radians(12.5f));
-    headlight.outerCutOff = glm::cos(glm::radians(17.5f));
-    lm.addLight(&headlight);
+    sun = std::shared_ptr<DirectionalLight>(new DirectionalLight());
+    sun->dir = glm::vec3(0.f, -0.3f, 0.5f);
+    sun->color = glm::vec3(0.6f, 0.4f, 0.3f);
+    lm.addLight(sun);
+    headlight = std::shared_ptr<SpotLight>(new SpotLight());
+    headlight->dir = camFront;
+    headlight->pos = camPos;
+    headlight->color = glm::vec3(0.6f, 0.6f, 0.6f);
+    headlight->constant = 1.f;
+    headlight->linear = 0.19f;
+    headlight->quadratic = 0.036f;
+    headlight->cutOff = glm::cos(glm::radians(12.5f));
+    headlight->outerCutOff = glm::cos(glm::radians(17.5f));
+    lm.addLight(headlight);
 
     //set world lights params in shaders
     lm.setLights(objectShader);
     lm.setLights(foliageShader);
+    lm.setLights(*sp);
 
 
     return true;
@@ -474,9 +497,9 @@ void processInput(GLFWwindow* window)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
-        sun.dir = glm::rotate(glm::mat4(1.f), deltaTime, glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(sun.dir, 1.f);
-        lm.setLight(objectShader, sun);
-        lm.setLight(foliageShader, sun);
+        sun->dir = glm::rotate(glm::mat4(1.f), deltaTime, glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(sun->dir, 1.f);
+        lm.setLight(objectShader, *sun);
+        lm.setLight(foliageShader, *sun);
     }
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

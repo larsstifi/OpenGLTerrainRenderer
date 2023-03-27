@@ -4,31 +4,41 @@
 #include <FastNoise/FastNoise.h>
 #include <FastNoise/Metadata.h>
 #include <FastNoise/Generators/Modifiers.h>
+#include <FastNoise/Generators/BasicGenerators.h>
 #include <glm/glm.hpp>
 
 
 class NoiseGenerator {
+	FastNoise::SmartNode <FastNoise::DomainOffset> fnOffset;
 	FastNoise::SmartNode <FastNoise::DomainScale> fnScale;
 	FastNoise::SmartNode <> fnGenerator;
 public:
 	NoiseGenerator() {
 		
-		auto fnTerrain = FastNoise::NewFromEncodedNodeTree("EQACAAAAAAAgQBAAAAAAQBkAEwDD9Sg/DQAEAAAAAAAgQAkAAGZmJj8AAAAAPwEEAAAAAAAAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3MTD4AMzMzPwAAAAA/");
+		fnOffset = FastNoise::New<FastNoise::DomainOffset>();
+		fnScale = FastNoise::New<FastNoise::DomainScale>();
+		auto fnScale2 = FastNoise::New<FastNoise::DomainScale>();
+		auto fnTerrain = FastNoise::NewFromEncodedNodeTree("GQAcAAEZAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwADNzEw+ARQAEwAAAIA/DQAFAAAAAAAAQAgAAAAAAD8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+		
+
+		
 		auto fnSimplex = FastNoise::New<FastNoise::Simplex>();
 		auto fnFractal = FastNoise::New<FastNoise::FractalFBm>();
 		fnFractal->SetSource(fnSimplex);
 		fnFractal->SetOctaveCount(5);
-		fnScale = FastNoise::New<FastNoise::DomainScale>();
-		fnScale->SetSource(fnSimplex);
-		fnScale->SetScale(0.1f);
 		auto fnAdd = FastNoise::New<FastNoise::Add>();
 		fnAdd->SetLHS(fnFractal);
-		auto fnPositionOutput = FastNoise::New<FastNoise::PositionOutput>();
-		fnPositionOutput->Set<FastNoise::Dim::Y>(3.f, 0);
-		fnAdd->SetRHS(fnPositionOutput);
+		auto fnPositionOutput = FastNoise::New<FastNoise::DistanceToPoint>();
+		fnPositionOutput->SetDistanceFunction(FastNoise::DistanceFunction::Euclidean);
+		auto fnAdd2 = FastNoise::New < FastNoise::Add>();
+		fnAdd2->SetLHS(fnPositionOutput);
+		fnAdd2->SetRHS(-2.f);
+		fnAdd->SetRHS(fnAdd2);
 		
-
-		fnScale->SetSource(fnAdd);
+		fnScale2->SetScale(0.5f);
+		fnScale2->SetSource(fnFractal);
+		fnOffset->SetSource(fnScale2);
+		fnScale->SetSource(fnScale2);
 		fnGenerator = fnScale;
 		
 	}

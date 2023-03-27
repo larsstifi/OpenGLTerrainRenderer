@@ -69,6 +69,9 @@
     <ClCompile Include="Terrain\Octree.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="Models\Renderer.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -132,6 +135,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="Terrain\Octree.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\Renderer.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

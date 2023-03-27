@@ -17,20 +17,28 @@ int executeGeneration(TerrainChunk* tc, NoiseGenerator ng, int size, float freq,
 	return 0;
 }
 
+Octree::~Octree()
+{
+	clearNode(&root);
+}
+
 void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 	//first we fill the buffers of the terrainchunks created in the last loop
 	int size = terrainGenerationThreads.size();
+	if (size > MAX_CHUNKS_READ_PER_FRAME) size = MAX_CHUNKS_READ_PER_FRAME;
 	for (size_t i = 0; i < size; i++)
 	{
-		std::pair<std::thread*, TerrainChunk*> pair = terrainGenerationThreads.front(); terrainGenerationThreads.pop_front();
+		std::pair<std::thread*, OctreeNode*> pair = terrainGenerationThreads.front(); terrainGenerationThreads.pop_front();
 		std::thread* curThread = pair.first;
-		TerrainChunk* curTC = pair.second;
+		OctreeNode* curNode = pair.second;
 		curThread->join();
 		delete curThread;
-		curTC->fillBuffers();
+		curNode->tc->fillBuffers();
+		curNode->tcSet = true;
+		clearChildren(curNode);
 	}
 
-
+	glm::vec3 octreeCornerPos = octreePos - glm::vec3((float)(1 << (TreeDepth - 1)));
 	unsigned int CreatedChunksAmt = 0;
 	bool childNotCreated = false;
 	std::stack<OctreeNode*> stack; //keep track of Nodes and how many children we already iterated over
@@ -48,29 +56,24 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 		unsigned int currentIteration = iterationStack.top();
 		//calculate target LOD for this chunk
 		int halfsize = 1 << (curDepth - 1);
-		glm::vec3 d = (glm::vec3(curPos) + glm::vec3(halfsize) - playerPos / (float)chunkSize) ;
-		int targetDepth = (sqrtf(glm::dot(d, d))- halfsize * 2.f) * LOD_Falloff;
+		glm::vec3 d = ((glm::vec3(curPos) + glm::vec3(halfsize)) * (float) chunkSize + octreeCornerPos) * TerrainScale  - playerPos;
+		int targetDepth = (sqrtf(glm::dot(d, d))- halfsize * 2.f * TerrainScale * chunkSize) * LOD_Falloff;
 		if (targetDepth < 0) targetDepth = 0;
 
 		//check if last node or below target depth, if so add this node and move up in tree          only check if this is the first iteration
 		bool isActive = (currentIteration == 0 && (int)curDepth <= targetDepth) || curDepth == 0;
 		if (isActive && !(curNode->tcSet)) {
-				if (CreatedChunksAmt < MAX_CHUNKS_PER_FRAME) {
+				if (!(curNode->isGenerating) && terrainGenerationThreads.size() < MAX_CHUNKS_IN_GENERATION && CreatedChunksAmt < MAX_CHUNKS_GEN_PER_FRAME) {
 					TerrainChunk* newTC;
 					newTC = new TerrainChunk();
-					newTC->pos = glm::vec3(curPos * chunkSize) + octreePos;
-					//std::thread* newThread = new std::thread(*newTC, ng, chunkSize, 0.01f, (float)(1 << curDepth), 0);
-					std::thread* newThread = new std::thread(executeGeneration, newTC , ng, chunkSize, 0.01f, (float)(1 << curDepth), 0);
-					terrainGenerationThreads.push_back(std::pair<std::thread*, TerrainChunk*>(newThread, newTC));
-					newTC->setMat(texture);
+					newTC->pos = (glm::vec3(curPos * chunkSize) + octreeCornerPos);
 					curNode->tc = newTC;
-					curNode->tcSet = true;
-					gui_Cout.appendf("New Chunk at: %.0f %.0f %.0f\n", newTC->pos.x, newTC->pos.y, newTC->pos.z);
+					newTC->setMat(texture);
+					curNode->isGenerating = true;
 					CreatedChunksAmt++;
+					std::thread* newThread = new std::thread(executeGeneration, newTC, ng, chunkSize, 0.01f, (float)(1 << curDepth), 0);
+					terrainGenerationThreads.push_back(std::pair<std::thread*, OctreeNode*>(newThread, curNode));
 				}
-				
-
-				//clearChildren(curNode);
 
 				//move up a level in LOD
 				childNotCreated = true;
@@ -86,8 +89,10 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 			//std::cout << "Draw Chunk at: " << curNode->tc->pos.x << " " << curNode->tc->pos.y << " " << curNode->tc->pos.z << " Of Size: " << (1<<curDepth) << std::endl;
 			childNotCreated = false;
 			glm::mat4 modelMat(1.f);
+
+			modelMat = glm::scale(modelMat, glm::vec3(TerrainScale));
 			modelMat = glm::translate(modelMat, (curNode->tc->pos));
-			modelMat = glm::scale(modelMat, glm::vec3(glm::ivec3(1.f) * (1 << curDepth)));
+			modelMat = glm::scale(modelMat, glm::vec3((1 << curDepth)));
 			
 			modelMat = model * modelMat;
 			curNode->tc->draw(shader, modelMat, setMat);
