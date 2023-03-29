@@ -31,8 +31,8 @@ public:
 	~Octree();
 	void draw(ShaderProgram& shader, glm::mat4& model, bool setMat = true);
 	void drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat = true);
+	void drawImgui();
 	void setDepth(unsigned int depth) { TreeDepth = depth; };
-	void setTexture(unsigned int texture) { this->texture = texture; }
 private:
 	unsigned int TreeDepth;
 	OctreeNode root;
@@ -42,8 +42,8 @@ private:
 	int chunkSize = 16;
 	float TerrainScale = 1.f;
 	float NoiseScale = 3.f;
-	unsigned int texture;
 	void clearNode(OctreeNode* node);
 	void clearChildren(OctreeNode* node);
+	void resetOctee();
 
 };

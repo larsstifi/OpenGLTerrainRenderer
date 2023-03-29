@@ -12,7 +12,6 @@ class TerrainChunk : public Drawable
 protected:
 	dc::Mesh mesh;
     MeshRenderer meshRenderer;
-    Material mat;
 public:
     glm::vec3 pos;
     TerrainChunk() { this->pos = glm::vec3(0); mesh.vertices = std::vector<dc::Vertex>();   mesh.indices = std::vector<unsigned int>(); }

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "Drawable.h"
+#include <Lighting/LightManager.h>
 enum MAT_TYPE {
 	DISABLED,
 	OPAQUE
@@ -28,21 +29,25 @@ private:
 	std::vector<std::weak_ptr<Drawable>> objects;
 	std::vector<uint32_t> materialIndices;
 	std::vector<std::shared_ptr<RenderMaterial>> materials;
+    LightManager* lightManager;
+
+    bool gui_RenderDebug = false;
+    bool gui_RenderObjects = true;
+    void RenderObjects();
+    void RenderDebug();
 public:
-    Renderer(std::shared_ptr<ShaderProgram> sp) : shaderProgram(sp) 
-    {
-        shaderProgram->setInt("AmbientTexture", 0);
-        shaderProgram->setInt("DiffuseTexture", 1);
-        shaderProgram->setInt("SpecularTexture", 2);
-        shaderProgram->setInt("SpecularHighlightTexture", 3);
-        shaderProgram->setInt("AlphaTexture", 4);
-        shaderProgram->setInt("BumpTexture", 5);
-        shaderProgram->setBool("blinn", true);
-    }
+    Renderer(std::shared_ptr<ShaderProgram> sp) : shaderProgram(sp) { lightManager = new LightManager(1,1,1); }
+    ~Renderer() { delete lightManager; }
 	void Render();
+    void RenderImgui();
 	void addObject(std::shared_ptr<Drawable> object, uint32_t matIndex);
+    void addLight(std::shared_ptr<SpotLight> sl);
+    void addLight(std::shared_ptr<PointLight> pl);
+    void addLight(std::shared_ptr<DirectionalLight> dl);
     uint32_t addMaterial(std::shared_ptr<RenderMaterial> mat);
     std::shared_ptr<ShaderProgram> shaderProgram;
+    std::shared_ptr<ShaderProgram> debugShader;
+    uint32_t  debugTexture = 0;
 
     glm::mat4 view;
     glm::mat4 projection;

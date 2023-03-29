@@ -36,9 +36,9 @@ struct PointLight {
 
 class LightManager {
 	unsigned int maxSpotAmt, maxPointAmt, maxDirectionalAmt;
-    std::vector<std::shared_ptr<DirectionalLight>> directionalLights;
-    std::vector<std::shared_ptr<PointLight>> pointLights;
-    std::vector<std::shared_ptr<SpotLight>> spotLights;
+    std::vector<std::shared_ptr<DirectionalLight>> directionalLights = {};
+    std::vector<std::shared_ptr<PointLight>> pointLights = {};
+    std::vector<std::shared_ptr<SpotLight>> spotLights = {};
 public:
 	LightManager(unsigned int maxSpotAmt, unsigned int maxPointAmt, unsigned int maxDirectionalAmt) {
 		this->maxSpotAmt = maxSpotAmt;

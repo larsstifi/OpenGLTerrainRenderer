@@ -33,9 +33,12 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 		OctreeNode* curNode = pair.second;
 		curThread->join();
 		delete curThread;
-		curNode->tc->fillBuffers();
-		curNode->tcSet = true;
-		clearChildren(curNode);
+		if (curNode && curNode->tc) {
+			curNode->tc->fillBuffers();
+			curNode->tcSet = true;
+			clearChildren(curNode);
+		}
+		
 	}
 
 	glm::vec3 octreeCornerPos = octreePos - glm::vec3((float)(1 << (TreeDepth - 1)));
@@ -68,7 +71,6 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 					newTC = new TerrainChunk();
 					newTC->pos = (glm::vec3(curPos * chunkSize) + octreeCornerPos);
 					curNode->tc = newTC;
-					newTC->setMat(texture);
 					curNode->isGenerating = true;
 					CreatedChunksAmt++;
 					std::thread* newThread = new std::thread(executeGeneration, newTC, ng, chunkSize, 0.01f, (float)(1 << curDepth), 0);
@@ -137,6 +139,12 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 void Octree::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat) {
 
 }
+void Octree::drawImgui() {
+	ImGui::Text("Octree Settings");
+	if(ImGui::SliderInt("Chunk Size", &chunkSize, 3, 64))resetOctee();
+	if(ImGui::DragFloat3("Octree Position", glm::value_ptr(octreePos), 1.f));
+}
+
 
 void Octree::clearNode(OctreeNode* node)
 {
@@ -163,4 +171,20 @@ void Octree::clearChildren(OctreeNode* node) {
 		}
 		node->leaf = true;
 	}
+}
+
+void Octree::resetOctee()
+{
+	//TODO: fix this so it doesnt cause error
+	for (size_t i = 0; i < terrainGenerationThreads.size(); i++)
+	{
+		std::pair<std::thread*, OctreeNode*> pair = terrainGenerationThreads.front(); terrainGenerationThreads.pop_front();
+		std::thread* curThread = pair.first;
+		OctreeNode* curNode = pair.second;
+		curThread->join();
+		delete curThread;
+		curNode->tcSet = true;
+		clearChildren(curNode);
+	}
+	clearNode(&root);
 }

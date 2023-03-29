@@ -26,6 +26,7 @@
 #include <FastNoise/FastNoise.h>
 #include <Models/Renderer.h>
 bool Setup();
+void createObjects();
 void Render();
 void RenderImgui();
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -41,30 +42,23 @@ unsigned int windowWidth = 2000;
 unsigned int windowHeight = 1500;
 glm::vec3 bgCol(0.2f, 0.2f, 0.2f);
 
-unsigned int grassTexture;
-unsigned int debugTexture;
-
 GLFWwindow* window;
-ShaderProgram objectShader;
-ShaderProgram foliageShader;
-ShaderProgram debugShader;
 
 Renderer* renderer;
 std::shared_ptr<ShaderProgram> sp;
+std::shared_ptr<ShaderProgram> dsp;
 
  
-TerrainChunk t;
 std::shared_ptr<Octree> octree;
+std::shared_ptr<Model> refModel;
 std::vector<std::shared_ptr<Drawable>> objects;
 
 glm::vec3 positions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f),
 };
 
-ShaderProgram lightingShader;
 std::shared_ptr<DirectionalLight> sun;
 std::shared_ptr <SpotLight> headlight;
-LightManager lm(5, 5, 5);
 
 float fov = 45.f;
 glm::vec3 camPos;
@@ -83,49 +77,23 @@ float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 
 
-int terrainSize = 32;
-int terrainSeed = 0;
-float sphereSize = 100;
-float sphereIntensity = 0.5f;
 FastNoise::SmartNode<> fnGenerator;
 NoiseGenerator noiseGenerator;
 
 //imgui params
-bool gui_RenderDebug = false;
-bool gui_RenderFoliage = false;
-bool gui_RenderObjects = true;
 bool gui_InfoWindow = true;
 bool gui_DemoWindow = false;
 float gui_CamSpeed = 25.f;
 bool gui_TerrainUpdatePlayerPos = true;
-std::string gui_FoliageTexturePath{ "Models/grass3.png" };
 
 int main()
 {
-    //TODO fix renderer to use materials correctly, clean up Model, moveImgui, add foliage and debug to renderer
+    //TODO clean up Model, moveImgui, add foliage and debug to renderer
     if (!Setup()) {
         return -1;
     }
-    
-    renderer = new Renderer(sp);
 
-    std::shared_ptr<RenderMaterial> mat = std::make_shared<RenderMaterial>();
-    mat->DiffuseTexture = Model::loadTexture("Models/Solid_white.jpg");
-    mat->AmbientTexture = Model::loadTexture("Models/Solid_white.jpg");
-    mat->SpecularTexture = Model::loadTexture("Models/Solid_white.jpg");
-    mat->AlphaTexture = Model::loadTexture("Models/Solid_white.jpg");
-
-    uint32_t matIndex = renderer->addMaterial(mat);
-
-    octree = std::shared_ptr<Octree>(new Octree());
-    octree->setDepth(5);
-    octree->setTexture(Model::loadTexture("Terrain/seamless-grass.jpg"));
-    //objects.push_back(octree);
-
-    renderer->addObject(octree, matIndex);
-
-    std::shared_ptr<Model> m(new Model("Models/Tree/tree low.obj", "Models/Solid_white.jpg"));
-    objects.push_back(m);
+    createObjects();
 
     while (!glfwWindowShouldClose(window))
     {
@@ -143,11 +111,6 @@ int main()
         // render
         // ------
         Render();
-        renderer->view = view;
-        renderer->camPos = camPos;
-        renderer->projection = projection;
-
-        renderer->Render();
 
         glfwSwapBuffers(window);
         // glfw: poll IO events (keys pressed/released, mouse moved etc.)
@@ -161,77 +124,26 @@ int main()
     return 0;
 }
 
-void RenderObjects() {
-    objectShader.use();
-    objectShader.setMat4("view", view);
-    objectShader.setMat4("projection", projection);
-    objectShader.setVec3("viewPos", camPos);
+void createObjects() {
+    std::shared_ptr<RenderMaterial> mat = std::make_shared<RenderMaterial>();
+    mat->matType = OPAQUE;
+    mat->DiffuseTexture = Model::loadTexture("Models/Solid_white.jpg");
+    mat->AmbientTexture = Model::loadTexture("Models/Solid_white.jpg");
+    mat->SpecularTexture = Model::loadTexture("Models/Solid_white.jpg");
+    mat->AlphaTexture = Model::loadTexture("Models/Solid_white.jpg");
 
+    uint32_t matIndex = renderer->addMaterial(mat);
 
-    //set headlightlight positions
-    headlight->pos = camPos;
-    headlight->dir = camFront;
-    lm.setLight(objectShader, *headlight);
+    octree = std::shared_ptr<Octree>(new Octree());
+    octree->setDepth(5);
+    renderer->addObject(octree, matIndex);
+    objects.push_back(octree);
 
-
-    //render each object
-    for (unsigned int i = 0; i < objects.size(); i++)
-    {
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, positions[0]);
-        model = glm::scale(model, glm::vec3(1));
-        objects[i]->draw(objectShader, model);
-    }
-}
-
-void RenderFoliage() {
-    //draw foliage
-    foliageShader.use();
-    foliageShader.setMat4("view", view);
-    foliageShader.setMat4("projection", projection);
-    foliageShader.setVec3("viewPos", camPos);
-    foliageShader.setFloat("dt", (float)glfwGetTime());
-    //set headlightlight positions
-    lm.setLight(foliageShader, *headlight);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
-
-
-    //render each object
-    for (unsigned int i = 0; i < objects.size(); i++)
-    {
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, positions[0]);
-        model = glm::scale(model, glm::vec3(1));
-        objects[i]->draw(foliageShader, model, false);
-    }
-}
-
-void RenderDebug() {
-    debugShader.use();
-    debugShader.setMat4("view", view);
-    debugShader.setMat4("projection", projection);
-    debugShader.setVec3("viewPos", camPos);
-    debugShader.setFloat("dt", (float)glfwGetTime());
-    //set headlightlight positions
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, debugTexture);
-
-
-    //render each object
-    for (unsigned int i = 0; i < objects.size(); i++)
-    {
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, positions[0]);
-        model = glm::scale(model, glm::vec3(1));
-        objects[i]->draw(debugShader, model, false);
-    }
+    refModel = std::make_shared<Model>("Models/Tree/tree low.obj", "Models/Solid_white.jpg");
+    std::shared_ptr<RenderMaterial> mat2 = std::make_shared<RenderMaterial>();
+    matIndex = renderer->addMaterial(mat2);
+    renderer->addObject(refModel, matIndex);
+    objects.push_back(refModel);
 }
 
 void RenderImgui() {
@@ -245,40 +157,30 @@ void RenderImgui() {
 
     ImGui::Begin("Main Config");    
     if (ImGui::CollapsingHeader("Render Settings")) {// Create a window called "Hello, world!" and append into it.
-        ImGui::Checkbox("Show Objects", &gui_RenderObjects);
-        ImGui::SameLine();
-        ImGui::Checkbox("Show Foliage", &gui_RenderFoliage);
-        ImGui::SameLine();
-        ImGui::Checkbox("Show Debug", &gui_RenderDebug);
+        renderer->RenderImgui();
 
         // Edit 1 float using a slider from 0.0f to 1.0f
         ImGui::ColorEdit3("Background color", (float*)&bgCol); // Edit 3 floats representing a color
-        if (ImGui::ColorEdit3("Sun color", (float*)&sun->color)) lm.setLight(objectShader, *sun);
+        ImGui::ColorEdit3("Sun color", (float*)&sun->color);
         ImGui::ColorEdit3("Headlight color", (float*)&headlight->color);
     }
 
     if (ImGui::CollapsingHeader("Terrain")) {
-        ImGui::SliderInt("Terrain size", &terrainSize, 3, 64, "%d");
-        ImGui::SliderInt("Terrain seed", &terrainSeed, 0, 1000, "%d");
-        ImGui::SliderFloat("Sphere size squared", &sphereSize, 1, 300, "%.1f");
-        ImGui::SliderFloat("Sphere Intensity", &sphereIntensity, 0, 1);
-
         ImGui::SliderFloat("LOD Falloff", &octree->LOD_Falloff, 0, 2, "%.2f");
-        ImGui::InputFloat3("Octree Position", (float*)&octree->octreePos);
         ImGui::Checkbox("Update Player Position", &gui_TerrainUpdatePlayerPos);
-    }
-    if (ImGui::CollapsingHeader("Foliage")) {
-       
-        ImGui::InputText("Texture file path", &gui_FoliageTexturePath);
-        ImGui::SameLine();
-        if (ImGui::Button("Set Texture")) {
-            grassTexture = Model::loadTexture(gui_FoliageTexturePath, 1);
-            std::cout << "Set foliage texure to: " << grassTexture << " at path: " << gui_FoliageTexturePath << std::endl;
-        }
     }
     if (ImGui::CollapsingHeader("Player")) {
         ImGui::SliderFloat("FOV", &fov, 1, 90, "%.1f");
         ImGui::SliderFloat("Velocity", &gui_CamSpeed, 1, 90, "%.1f");
+    }
+
+    if (ImGui::CollapsingHeader("Objects")) {
+        for (std::shared_ptr<Drawable> o : objects)
+        {
+            ImGui::Separator();
+            o->drawImgui();
+        }
+        
     }
 
     if (ImGui::CollapsingHeader("Windows")) {
@@ -316,19 +218,24 @@ void Render() {
     glClearColor(bgCol.x, bgCol.y, bgCol.z, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
     //set view matrices etc.
     view = glm::lookAt(camPos,
         camFront + camPos,
         camUp);
 
-    
     projection = glm::perspective(glm::radians(fov), ((float)windowWidth) / windowHeight, 0.1f, 1000.f);
-    if(gui_RenderObjects)RenderObjects();
-    if(gui_RenderFoliage)RenderFoliage();
-    if(gui_RenderDebug)RenderDebug();
-    RenderImgui();
 
-    //update screen
+    renderer->view = view;
+    renderer->camPos = camPos;
+    renderer->projection = projection;
+
+    headlight->pos = camPos;
+    headlight->dir = camFront;
+    renderer->Render();
+    
+
+    RenderImgui();
 }
 
 bool Setup() {
@@ -383,61 +290,35 @@ bool Setup() {
     //setup generel object shader
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT);
-    objectShader = ShaderProgram(vertexShaderPath, fragmentShaderPath);
-    objectShader.use();
-    objectShader.setInt("AmbientTexture", 0);
-    objectShader.setInt("DiffuseTexture", 1);
-    objectShader.setInt("SpecularTexture", 2);
-    objectShader.setInt("SpecularHighlightTexture", 3);
-    objectShader.setInt("AlphaTexture", 4);
-    objectShader.setInt("BumpTexture", 5);
-    objectShader.setBool("blinn", true);
-
-    //setup foliage shader
-    foliageShader = ShaderProgram("Shaders/Foliage.vert", "Shaders/Foliage.geom", "Shaders/Foliage.frag");
-    foliageShader.use();
-    foliageShader.setInt("AmbientTexture", 0);
-    foliageShader.setInt("DiffuseTexture", 1);
-    foliageShader.setInt("SpecularTexture", 2);
-    foliageShader.setInt("SpecularHighlightTexture", 3);
-    foliageShader.setInt("AlphaTexture", 4);
-    foliageShader.setInt("BumpTexture", 5);
-    foliageShader.setBool("blinn", true);
-    grassTexture = Model::loadTexture(gui_FoliageTexturePath, 1);
-    foliageShader.setVec3("AmbientColor", glm::vec3(0.7, 0.6, 0.3));
-    foliageShader.setVec3("DiffuseColor", glm::vec3(0.7, 0.6, 0.3));
-    foliageShader.setVec3("SpecularColor", glm::vec3(0.45, 0.4, 0.2));
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, grassTexture);
-
-
-    //setup debug shader
-    debugShader = ShaderProgram("Shaders/Debug.vert", "Shaders/Debug.geom", "Shaders/Debug.frag");
-    debugShader.use();
-    debugShader.setInt("texture1", 0);
-    debugTexture = Model::loadTexture("Models/debug-texture.png", 1);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, debugTexture);
 
 
     sp = std::make_shared<ShaderProgram>(vertexShaderPath, fragmentShaderPath);
+    sp->setInt("AmbientTexture", 0);
+    sp->setInt("DiffuseTexture", 1);
+    sp->setInt("SpecularTexture", 2);
+    sp->setInt("SpecularHighlightTexture", 3);
+    sp->setInt("AlphaTexture", 4);
+    sp->setInt("BumpTexture", 5);
+    sp->setBool("blinn", true);
+    dsp = std::make_shared<ShaderProgram>("Shaders/Debug.vert", "Shaders/Debug.geom", "Shaders/Debug.frag");
+    dsp->use();
+    dsp->setInt("texture1", 0);
     
     //setup cam position
     camPos = glm::vec3(0.0f, 0.0f, 3.0f);
     camFront = glm::vec3(0.0f, 0.0f, -1.0f);
     camUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
+    //setup renderers
+    renderer = new Renderer(sp);
+    renderer->debugShader = dsp;
+    renderer->debugTexture = Model::loadTexture("Models/debug-texture.png", 1);
+
     //setup lights
     sun = std::shared_ptr<DirectionalLight>(new DirectionalLight());
     sun->dir = glm::vec3(0.f, -0.3f, 0.5f);
     sun->color = glm::vec3(0.6f, 0.4f, 0.3f);
-    lm.addLight(sun);
+    renderer->addLight(sun);
     headlight = std::shared_ptr<SpotLight>(new SpotLight());
     headlight->dir = camFront;
     headlight->pos = camPos;
@@ -447,12 +328,10 @@ bool Setup() {
     headlight->quadratic = 0.036f;
     headlight->cutOff = glm::cos(glm::radians(12.5f));
     headlight->outerCutOff = glm::cos(glm::radians(17.5f));
-    lm.addLight(headlight);
+    renderer->addLight(headlight);
+
 
     //set world lights params in shaders
-    lm.setLights(objectShader);
-    lm.setLights(foliageShader);
-    lm.setLights(*sp);
 
 
     return true;
@@ -484,12 +363,10 @@ void processInput(GLFWwindow* window)
         camPos += glm::normalize(glm::cross(camFront, camUp)) * cameraSpeed;
 
     if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
-        objectShader.setBool("blinn", true);
-        foliageShader.setBool("blinn", true);
+        sp->setBool("blinn", true);
     }
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-        objectShader.setBool("blinn", false);
-        foliageShader.setBool("blinn", false);
+        sp->setBool("blinn", false);
     }
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -498,8 +375,6 @@ void processInput(GLFWwindow* window)
 
     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
         sun->dir = glm::rotate(glm::mat4(1.f), deltaTime, glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(sun->dir, 1.f);
-        lm.setLight(objectShader, *sun);
-        lm.setLight(foliageShader, *sun);
     }
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
