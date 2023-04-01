@@ -103,14 +103,18 @@ int main()
         if(gui_TerrainUpdatePlayerPos) octree->playerPos = camPos;
 
 
-        //std::cout << "FPS: " << 1 / deltaTime << std::endl;
         // input
         // -----
         processInput(window);
 
+        // update objects
+        // --------------
+        octree->Update();
+
         // render
         // ------
         Render();
+        RenderImgui();
 
         glfwSwapBuffers(window);
         // glfw: poll IO events (keys pressed/released, mouse moved etc.)
@@ -134,8 +138,7 @@ void createObjects() {
 
     uint32_t matIndex = renderer->addMaterial(mat);
 
-    octree = std::shared_ptr<Octree>(new Octree());
-    octree->setDepth(5);
+    octree = std::shared_ptr<Octree>(new Octree(5));
     renderer->addObject(octree, matIndex);
     objects.push_back(octree);
 
@@ -233,9 +236,6 @@ void Render() {
     headlight->pos = camPos;
     headlight->dir = camFront;
     renderer->Render();
-    
-
-    RenderImgui();
 }
 
 bool Setup() {
@@ -276,7 +276,6 @@ bool Setup() {
 
 
     
-
     //define callbacks
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 

@@ -35,7 +35,7 @@ public:
 		fnAdd2->SetRHS(-2.f);
 		fnAdd->SetRHS(fnAdd2);
 		
-		fnScale2->SetScale(0.5f);
+		fnScale2->SetScale(1.f);
 		fnScale2->SetSource(fnFractal);
 		fnOffset->SetSource(fnScale2);
 		fnScale->SetSource(fnScale2);

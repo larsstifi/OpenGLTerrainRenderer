@@ -1,6 +1,7 @@
 #include<Terrain/Octree.h>
 
-static glm::ivec3 ChildrenPos[8]{
+static glm::ivec3 ChildrenPos[8]
+{
 	glm::ivec3(0, 0, 0),
 	glm::ivec3(0, 0, 1),
 	glm::ivec3(0, 1, 0),
@@ -12,7 +13,8 @@ static glm::ivec3 ChildrenPos[8]{
 
 };
 
-int executeGeneration(TerrainChunk* tc, NoiseGenerator ng, int size, float freq, float scale, int seed) {
+int executeGeneration(TerrainChunk* tc, NoiseGenerator ng, int size, float freq, float scale, int seed) 
+{
 	tc->generateChunk(ng, size, freq, scale, seed);
 	return 0;
 }
@@ -22,7 +24,10 @@ Octree::~Octree()
 	clearNode(&root);
 }
 
-void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
+void Octree::Update() 
+{
+	//TODO:: refactor
+	activeNodes = std::vector<OctreeNode*>();
 	//first we fill the buffers of the terrainchunks created in the last loop
 	int size = terrainGenerationThreads.size();
 	if (size > MAX_CHUNKS_READ_PER_FRAME) size = MAX_CHUNKS_READ_PER_FRAME;
@@ -38,7 +43,7 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 			curNode->tcSet = true;
 			clearChildren(curNode);
 		}
-		
+
 	}
 
 	glm::vec3 octreeCornerPos = octreePos - glm::vec3((float)(1 << (TreeDepth - 1)));
@@ -59,45 +64,37 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 		unsigned int currentIteration = iterationStack.top();
 		//calculate target LOD for this chunk
 		int halfsize = 1 << (curDepth - 1);
-		glm::vec3 d = ((glm::vec3(curPos) + glm::vec3(halfsize)) * (float) chunkSize + octreeCornerPos) * TerrainScale  - playerPos;
-		int targetDepth = (sqrtf(glm::dot(d, d))- halfsize * 2.f * TerrainScale * chunkSize) * LOD_Falloff;
+		glm::vec3 d = ((glm::vec3(curPos) + glm::vec3(halfsize)) * (float)chunkSize + octreeCornerPos) * TerrainScale - playerPos;
+		int targetDepth = (sqrtf(glm::dot(d, d)) - halfsize * 2.f * TerrainScale * chunkSize) * LOD_Falloff;
 		if (targetDepth < 0) targetDepth = 0;
 
 		//check if last node or below target depth, if so add this node and move up in tree          only check if this is the first iteration
 		bool isActive = (currentIteration == 0 && (int)curDepth <= targetDepth) || curDepth == 0;
 		if (isActive && !(curNode->tcSet)) {
-				if (!(curNode->isGenerating) && terrainGenerationThreads.size() < MAX_CHUNKS_IN_GENERATION && CreatedChunksAmt < MAX_CHUNKS_GEN_PER_FRAME) {
-					TerrainChunk* newTC;
-					newTC = new TerrainChunk();
-					newTC->pos = (glm::vec3(curPos * chunkSize) + octreeCornerPos);
-					curNode->tc = newTC;
-					curNode->isGenerating = true;
-					CreatedChunksAmt++;
-					std::thread* newThread = new std::thread(executeGeneration, newTC, ng, chunkSize, 0.01f, (float)(1 << curDepth), 0);
-					terrainGenerationThreads.push_back(std::pair<std::thread*, OctreeNode*>(newThread, curNode));
-				}
+			if (!(curNode->isGenerating) && terrainGenerationThreads.size() < MAX_CHUNKS_IN_GENERATION && CreatedChunksAmt < MAX_CHUNKS_GEN_PER_FRAME) {
+				TerrainChunk* newTC;
+				newTC = new TerrainChunk();
+				newTC->pos = (glm::vec3(curPos * chunkSize) + octreeCornerPos);
+				curNode->tc = newTC;
+				curNode->isGenerating = true;
+				CreatedChunksAmt++;
+				std::thread* newThread = new std::thread(executeGeneration, newTC, ng, chunkSize, 0.01f, (float)(1 << curDepth), 0);
+				terrainGenerationThreads.push_back(std::pair<std::thread*, OctreeNode*>(newThread, curNode));
+			}
 
-				//move up a level in LOD
-				childNotCreated = true;
-				stack.pop();
-				iterationStack.pop();
-				childrenIndexStack.pop();
-				curDepth++;
-				curPos -= ChildrenPos[curChildIndex] * (1 << (curDepth - 1));
-				continue;
+			//move up a level in LOD
+			childNotCreated = true;
+			stack.pop();
+			iterationStack.pop();
+			childrenIndexStack.pop();
+			curDepth++;
+			curPos -= ChildrenPos[curChildIndex] * (1 << (curDepth - 1));
+			continue;
 		}
 		if (isActive || (childNotCreated && curNode->tcSet)) {
-			//draw node
-			//std::cout << "Draw Chunk at: " << curNode->tc->pos.x << " " << curNode->tc->pos.y << " " << curNode->tc->pos.z << " Of Size: " << (1<<curDepth) << std::endl;
+			//active node
 			childNotCreated = false;
-			glm::mat4 modelMat(1.f);
-
-			modelMat = glm::scale(modelMat, glm::vec3(TerrainScale));
-			modelMat = glm::translate(modelMat, (curNode->tc->pos));
-			modelMat = glm::scale(modelMat, glm::vec3((1 << curDepth)));
-			
-			modelMat = model * modelMat;
-			curNode->tc->draw(shader, modelMat, setMat);
+			activeNodes.push_back(curNode);
 		}
 		if (isActive || currentIteration == 8) {
 			//move up a level in LOD
@@ -115,6 +112,7 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 			{
 				curNode->children[i].leaf = true;
 				curNode->children[i].tcSet = false;
+				curNode->children[i].depth = curNode->depth - 1;
 
 			}
 			curNode->leaf = false;
@@ -133,16 +131,41 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 		//move down
 		curDepth--;
 		curPos += ChildrenPos[currentIteration] * (1 << (curDepth));
-		
+
 	}
 }
-void Octree::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat) {
+
+void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat)
+{
+	for (OctreeNode* curNode : activeNodes) {
+		glm::mat4 modelMat(1.f);
+		modelMat = glm::scale(modelMat, glm::vec3(TerrainScale));
+		modelMat = glm::translate(modelMat, (curNode->tc->pos));
+		modelMat = glm::scale(modelMat, glm::vec3(1 << curNode->depth));
+
+		modelMat = model * modelMat;
+		curNode->tc->draw(shader, modelMat, setMat);
+	}
 
 }
-void Octree::drawImgui() {
+void Octree::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat)
+{
+	for (OctreeNode* curNode : activeNodes) {
+		glm::mat4 modelMat(1.f);
+		modelMat = glm::scale(modelMat, glm::vec3(TerrainScale));
+		modelMat = glm::translate(modelMat, (curNode->tc->pos));
+		modelMat = glm::scale(modelMat, glm::vec3(1 << curNode->depth));
+
+		modelMat = model * modelMat;
+		curNode->tc->drawInstanced(shader, modelMat, count, setMat);
+	}
+}
+void Octree::drawImgui() 
+{
 	ImGui::Text("Octree Settings");
-	if(ImGui::SliderInt("Chunk Size", &chunkSize, 3, 64))resetOctee();
-	if(ImGui::DragFloat3("Octree Position", glm::value_ptr(octreePos), 1.f));
+	if (ImGui::SliderInt("Chunk Size", &chunkSize, 3, 64))resetOctree();
+	if (ImGui::DragFloat3("Octree Position", glm::value_ptr(octreePos), 1.f)) resetOctree();
+	if (ImGui::SliderInt("Octree Depth", (int*) &TreeDepth, 0, 8)) resetOctree();
 }
 
 
@@ -163,7 +186,8 @@ void Octree::clearNode(OctreeNode* node)
 	}
 }
 
-void Octree::clearChildren(OctreeNode* node) {
+void Octree::clearChildren(OctreeNode* node) 
+{
 	if (!(node->leaf)) {
 		for (size_t i = 0; i < 8; i++)
 		{
@@ -173,18 +197,18 @@ void Octree::clearChildren(OctreeNode* node) {
 	}
 }
 
-void Octree::resetOctee()
+void Octree::resetOctree()
 {
 	//TODO: fix this so it doesnt cause error
-	for (size_t i = 0; i < terrainGenerationThreads.size(); i++)
+	uint32_t size = terrainGenerationThreads.size();
+	for (size_t i = 0; i < size; i++)
 	{
 		std::pair<std::thread*, OctreeNode*> pair = terrainGenerationThreads.front(); terrainGenerationThreads.pop_front();
 		std::thread* curThread = pair.first;
-		OctreeNode* curNode = pair.second;
 		curThread->join();
 		delete curThread;
-		curNode->tcSet = true;
-		clearChildren(curNode);
 	}
 	clearNode(&root);
+	root = OctreeNode();
+	root.depth = TreeDepth;
 }
