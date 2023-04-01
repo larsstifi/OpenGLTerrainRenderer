@@ -30,7 +30,7 @@ public:
 	ImGuiTextBuffer gui_Cout;
 	glm::vec3 playerPos = glm::vec3(0.f);
 	glm::vec3 octreePos = glm::vec3(-200, -200, -200);
-	Octree(uint32_t treeDepth) : TreeDepth(treeDepth) { root.depth = TreeDepth; };
+	Octree(uint32_t treeDepth) : TreeDepth(treeDepth) { root.depth = TreeDepth; ng.setScale(NoiseScale); };
 	~Octree();
 	void draw(ShaderProgram& shader, glm::mat4& model, bool setMat = true);
 	void Update();
@@ -46,6 +46,7 @@ private:
 	int chunkSize = 16;
 	float TerrainScale = 1.f;
 	float NoiseScale = 3.f;
+	float NoiseFrequency = .01f;
 	void clearNode(OctreeNode* node);
 	void clearChildren(OctreeNode* node);
 	void resetOctree();

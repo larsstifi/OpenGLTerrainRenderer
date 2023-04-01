@@ -12,6 +12,7 @@ class NoiseGenerator {
 	FastNoise::SmartNode <FastNoise::DomainOffset> fnOffset;
 	FastNoise::SmartNode <FastNoise::DomainScale> fnScale;
 	FastNoise::SmartNode <> fnGenerator;
+	float scale;
 public:
 	NoiseGenerator() {
 		
@@ -42,6 +43,7 @@ public:
 		fnGenerator = fnScale;
 		
 	}
+	void setScale(float scale) { this->scale = scale; };
 	void generateNoise(float* noiseOutput, int terrainSize, glm::vec3 noisePos = glm::vec3(0), float freq = 0.2, float scale = 1.f, int seed = rand());
 	void generateSphericalNoise(float* noiseOutput, int terrainSize, float sphereRadiusSquared, float sphereIntensity, glm::vec3 noisePos = glm::vec3(0), glm::vec3 sphereCenter = glm::vec3(0), int seed = rand());
 	void generateSphere(float* noiseOutput, int terrainSize, float sphereRadiusSquared, float sphereIntensity, glm::vec3 noisePos = glm::vec3(0), glm::vec3 sphereCenter = glm::vec3(0));

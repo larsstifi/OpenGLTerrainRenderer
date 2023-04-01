@@ -4,7 +4,7 @@ void NoiseGenerator::generateNoise(float* noiseOutput, int terrainSize, glm::vec
 	fnOffset->SetOffset<FastNoise::Dim::X>(noisePos.x);
 	fnOffset->SetOffset<FastNoise::Dim::Y>(noisePos.y);
 	fnOffset->SetOffset<FastNoise::Dim::Z>(noisePos.z);
-	fnScale->SetScale(scale);
+	fnScale->SetScale(scale * this->scale);
 	fnGenerator->GenUniformGrid3D(noiseOutput, lroundf(noisePos.x), lroundf(noisePos.y), lroundf(noisePos.z), terrainSize, terrainSize, terrainSize, freq, seed);
 
 	

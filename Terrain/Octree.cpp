@@ -78,7 +78,7 @@ void Octree::Update()
 				curNode->tc = newTC;
 				curNode->isGenerating = true;
 				CreatedChunksAmt++;
-				std::thread* newThread = new std::thread(executeGeneration, newTC, ng, chunkSize, 0.01f, (float)(1 << curDepth), 0);
+				std::thread* newThread = new std::thread(executeGeneration, newTC, ng, chunkSize, NoiseFrequency, (float)(1 << curDepth), 0);
 				terrainGenerationThreads.push_back(std::pair<std::thread*, OctreeNode*>(newThread, curNode));
 			}
 
@@ -160,12 +160,14 @@ void Octree::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int
 		curNode->tc->drawInstanced(shader, modelMat, count, setMat);
 	}
 }
-void Octree::drawImgui() 
+void Octree::drawImgui()
 {
 	ImGui::Text("Octree Settings");
 	if (ImGui::SliderInt("Chunk Size", &chunkSize, 3, 64))resetOctree();
 	if (ImGui::DragFloat3("Octree Position", glm::value_ptr(octreePos), 1.f)) resetOctree();
-	if (ImGui::SliderInt("Octree Depth", (int*) &TreeDepth, 0, 8)) resetOctree();
+	if (ImGui::SliderInt("Octree Depth", (int*)&TreeDepth, 0, 8)) resetOctree();
+	if (ImGui::SliderFloat("Noise Frequency", &NoiseFrequency, 0.001, 2)) resetOctree();
+	if (ImGui::SliderFloat("Noise Scale", &NoiseScale, 0.001, 2)) {ng.setScale(NoiseScale); resetOctree(); }
 }
 
 
