@@ -36,11 +36,10 @@ Mesh dc::generateMesh(std::vector<float>& density, unsigned int gridSize)
 					continue; // if there are no signed edges there is no surface crossing the current cell => no vertex needed and no surfaces
 				}
 
-				//create vertex
-				glm::vec3 vertPos = glm::vec3(i + 0.5f, j + 0.5f, k + 0.5f); // place vertex in the middle of the cell
-
+				
 				//calculate vertex position by taking average of signed edges middle points
-				vertPos = glm::vec3(0.f);
+				glm::vec3 vertPos = glm::vec3(0.f);
+				glm::vec3 vertNorm = glm::vec3(0.f);
 				for (int x = 0; x < signedEdges.size(); x++)
 				{
 					bool flipped = signedEdges[x] < 0;
@@ -48,6 +47,7 @@ Mesh dc::generateMesh(std::vector<float>& density, unsigned int gridSize)
 					glm::vec3 startpos = cornerPos[edges[edgeIndex][0]];
 					glm::vec3 dir = glm::vec3(cornerPos[edges[edgeIndex][1]]) - startpos;
 					vertPos += startpos + dir * 0.5f ;
+					vertNorm += dir * (flipped ? -1.f : 1.f);
 				}
 				vertPos /= signedEdges.size();
 				vertPos += glm::vec3(curCellPos) - glm::vec3(-0.5f);

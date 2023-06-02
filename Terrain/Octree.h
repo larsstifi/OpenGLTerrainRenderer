@@ -46,9 +46,9 @@ private:
 	int chunkSize = 16;
 	float TerrainScale = 1.f;
 	float NoiseScale = 3.f;
-	float NoiseFrequency = .01f;
+	float NoiseGain = 1.f;
+	float NoiseLacunarity = 1.f;
 	void clearNode(OctreeNode* node);
 	void clearChildren(OctreeNode* node);
 	void resetOctree();
-
 };

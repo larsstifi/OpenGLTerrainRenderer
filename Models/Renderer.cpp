@@ -8,7 +8,6 @@ void Renderer::RenderObjects()
 	shaderProgram->setMat4("projection", projection);
 	shaderProgram->setVec3("viewPos", camPos);
 	lightManager->setLights(*shaderProgram);
-	glm::mat4 model = glm::mat4(1.f);
 	uint32_t activeMat = std::numeric_limits<uint32_t>::max();
 	std::vector<std::weak_ptr<Drawable>>::iterator itO = objects.begin();
 	std::vector<uint32_t>::iterator itM = materialIndices.begin();
@@ -43,6 +42,7 @@ void Renderer::RenderObjects()
 				glBindTexture(GL_TEXTURE_2D, materials[activeMat]->BumpTexture);
 			}
 		}
+		glm::mat4 model = glm::mat4(1.f);
 		curObject->draw(*shaderProgram, model, materials[activeMat]->matType == DISABLED);
 		++itM;
 		++itO;
@@ -73,10 +73,10 @@ void Renderer::RenderDebug()
 		debugShader->setFloat("dt", (float)glfwGetTime());
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, debugTexture);
-		glm::mat4 model = glm::mat4(1.f);
 		std::vector<std::weak_ptr<Drawable>>::iterator itO = objects.begin();
 		std::vector<uint32_t>::iterator itM = materialIndices.begin();
 		for (; itO != objects.end() && itM != materialIndices.end();) {
+			glm::mat4 model = glm::mat4(1.f);
 			std::shared_ptr<Drawable> curObject;
 			if (!(curObject = (*itO).lock())) { itO = objects.erase(itO); itM = materialIndices.erase(itM); continue; }
 			curObject->draw(*debugShader, model, false);

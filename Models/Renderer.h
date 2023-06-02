@@ -21,7 +21,8 @@ struct RenderMaterial {
     unsigned int SpecularTexture = 0;
     unsigned int SpecularHightlightTexture = 0;
     unsigned int AlphaTexture = 0;
-    unsigned int BumpTexture = 0;};
+    unsigned int BumpTexture = 0;
+};
 
 class Renderer{
 private:

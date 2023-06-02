@@ -25,6 +25,7 @@
 
 #include <FastNoise/FastNoise.h>
 #include <Models/Renderer.h>
+#include <Models/Plane.h>
 bool Setup();
 void createObjects();
 void Render();
@@ -81,6 +82,8 @@ FastNoise::SmartNode<> fnGenerator;
 NoiseGenerator noiseGenerator;
 
 //imgui params
+
+ImGuiTextBuffer gui_Cout;
 bool gui_InfoWindow = true;
 bool gui_DemoWindow = false;
 float gui_CamSpeed = 25.f;
@@ -135,15 +138,21 @@ void createObjects() {
 
     uint32_t matIndex = renderer->addMaterial(mat);
 
-    octree = std::shared_ptr<Octree>(new Octree(5));
+    octree = std::make_shared<Octree>(5);
     renderer->addObject(octree, matIndex);
     objects.push_back(octree);
+
+
+    std::shared_ptr<Plane> plane = std::make_shared<Plane>(glm::vec3(0), glm::vec2(100));
+    renderer->addObject(plane, matIndex);
+    objects.push_back(plane);
 
     refModel = std::make_shared<Model>("Models/Tree/tree low.obj", "Models/Solid_white.jpg");
     std::shared_ptr<RenderMaterial> mat2 = std::make_shared<RenderMaterial>();
     matIndex = renderer->addMaterial(mat2);
     renderer->addObject(refModel, matIndex);
     objects.push_back(refModel);
+
 }
 
 void RenderImgui() {
@@ -166,7 +175,6 @@ void RenderImgui() {
     }
 
     if (ImGui::CollapsingHeader("Terrain")) {
-        ImGui::SliderFloat("LOD Falloff", &octree->LOD_Falloff, 0, 2, "%.2f");
         ImGui::Checkbox("Update Player Position", &gui_TerrainUpdatePlayerPos);
     }
     if (ImGui::CollapsingHeader("Player")) {
@@ -190,8 +198,8 @@ void RenderImgui() {
     ImGui::End();
 
     ImGui::Begin("Console Out");
-    if (ImGui::Button("Hello")) octree->gui_Cout.append("Hello\n");
-    ImGui::TextUnformatted(octree->gui_Cout.begin());
+    if (ImGui::Button("Hello")) gui_Cout.append("Hello\n");
+    ImGui::TextUnformatted(gui_Cout.begin());
     ImGui::SetScrollHereY(1.0f);
     ImGui::End();
     //additional windows

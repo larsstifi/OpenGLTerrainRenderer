@@ -72,6 +72,9 @@
     <ClCompile Include="Models\Renderer.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="Plane.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -138,6 +141,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="Models\Renderer.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="Plane.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
