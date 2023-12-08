@@ -155,6 +155,10 @@
     <None Include="src\Shaders\Debug.frag" />
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="..\..\..\Libraries\cpp\Build\FastNoise2\bin\FastNoise.dll" />
+    <CopyFileToFolders Include="lib\FastNoise.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\FastNoise.lib" />
+    <Library Include="lib\glfw3.lib" />
   </ItemGroup>
 </Project>

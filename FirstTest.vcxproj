@@ -45,14 +45,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(SolutionDir);$(SolutionDir)inc;$(SolutionDir)src;$(LibraryPath)</IncludePath>
-    <LibraryPath>$(SolutionDir);$(SolutionDir)lib;$(SolutionDir)src;C:\Users\Arcterusax\OneDrive - ETH Zurich\Projects\Libraries\cpp\libraries;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir);$(SolutionDir)lib;$(SolutionDir)src;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\bin\$(ProjectName)\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\bin-int\$(ProjectName)\$(Configuration)-$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(SolutionDir);$(SolutionDir)inc;$(SolutionDir)src;$(LibraryPath)</IncludePath>
-    <LibraryPath>$(SolutionDir);$(SolutionDir)lib;$(SolutionDir)src;C:\Users\Arcterusax\OneDrive - ETH Zurich\Projects\Libraries\cpp\libraries;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir);$(SolutionDir)lib;$(SolutionDir)src;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)\bin\$(ProjectName)\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\bin-int\$(ProjectName)\$(Configuration)-$(Platform)\</IntDir>
   </PropertyGroup>
@@ -85,6 +85,7 @@
       <BrowseInformation>true</BrowseInformation>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,7 +143,7 @@
     <ClInclude Include="src\Terrain\TerrainChunk.h" />
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="..\..\..\Libraries\cpp\Build\FastNoise2\bin\FastNoise.dll">
+    <CopyFileToFolders Include="lib\FastNoise.dll">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
@@ -155,6 +156,10 @@
     <None Include="src\Shaders\fragment.frag" />
     <None Include="src\Shaders\Foliage.geom" />
     <None Include="src\Shaders\vs.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\FastNoise.lib" />
+    <Library Include="lib\glfw3.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
