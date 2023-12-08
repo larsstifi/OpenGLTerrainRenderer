@@ -111,7 +111,7 @@
     <ClCompile Include="src\Models\Model.cpp" />
     <ClCompile Include="src\Models\Renderer.cpp" />
     <ClCompile Include="src\Plane.cpp" />
-    <ClCompile Include="src\Quelle.cpp" />
+    <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\ShaderProgram.cpp" />
     <ClCompile Include="src\Terrain\DualContouring.cpp" />
     <ClCompile Include="src\Terrain\NoiseGenerator.cpp" />

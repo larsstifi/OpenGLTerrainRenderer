@@ -48,6 +48,7 @@ private:
 	float NoiseScale = 3.f;
 	float NoiseGain = 1.f;
 	float NoiseLacunarity = 1.f;
+	bool UpdateTerrain = true;
 	void clearNode(OctreeNode* node);
 	void clearChildren(OctreeNode* node);
 	void resetOctree();

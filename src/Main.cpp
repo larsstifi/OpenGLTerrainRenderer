@@ -4,7 +4,6 @@
 #include <imgui/imgui_stdlib.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_glfw.h>
-//#include <imgui/imgui_impl_opengl3_loader.h>
 #include <Shaders/ShaderProgram.h>
 #include <Models/MeshRenderer.h>
 #include <Models/Model.h>
@@ -32,6 +31,7 @@ void Render();
 void RenderImgui();
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 std::string readFile(const char* filePath);
@@ -87,7 +87,7 @@ ImGuiTextBuffer gui_Cout;
 bool gui_InfoWindow = true;
 bool gui_DemoWindow = false;
 float gui_CamSpeed = 25.f;
-bool gui_TerrainUpdatePlayerPos = true;
+bool gui_Active = false;
 
 int main()
 {
@@ -103,7 +103,7 @@ int main()
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        if(gui_TerrainUpdatePlayerPos) octree->playerPos = camPos;
+        octree->playerPos = camPos;
 
 
         // input
@@ -117,7 +117,8 @@ int main()
         // render
         // ------
         Render();
-        RenderImgui();
+        if(gui_Active) RenderImgui();
+        
 
         glfwSwapBuffers(window);
         // glfw: poll IO events (keys pressed/released, mouse moved etc.)
@@ -174,9 +175,6 @@ void RenderImgui() {
         ImGui::ColorEdit3("Headlight color", (float*)&headlight->color);
     }
 
-    if (ImGui::CollapsingHeader("Terrain")) {
-        ImGui::Checkbox("Update Player Position", &gui_TerrainUpdatePlayerPos);
-    }
     if (ImGui::CollapsingHeader("Player")) {
         ImGui::SliderFloat("FOV", &fov, 1, 90, "%.1f");
         ImGui::SliderFloat("Velocity", &gui_CamSpeed, 1, 90, "%.1f");
@@ -258,7 +256,7 @@ bool Setup() {
     windowWidth = mode->width;
     
     //create Window
-    window = glfwCreateWindow(windowWidth, windowHeight, "LearnOpenGL", NULL, NULL);
+    window = glfwCreateWindow(windowWidth, windowHeight, "Render", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -276,14 +274,13 @@ bool Setup() {
     glViewport(0, 0, windowWidth, windowHeight);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 
     
     //define callbacks
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+    glfwSetKeyCallback(window, keyCallback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
@@ -337,7 +334,7 @@ bool Setup() {
 
     //set world lights params in shaders
 
-
+    
     return true;
 }
 
@@ -347,6 +344,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     windowHeight = height;
     glViewport(0, 0, width, height);
 }
+
 
 void processInput(GLFWwindow* window)
 {
@@ -365,59 +363,70 @@ void processInput(GLFWwindow* window)
         camPos -= glm::normalize(glm::cross(camFront, camUp)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camPos += glm::normalize(glm::cross(camFront, camUp)) * cameraSpeed;
-
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
-        sp->setBool("blinn", true);
-    }
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-        sp->setBool("blinn", false);
-    }
-    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
         sun->dir = glm::rotate(glm::mat4(1.f), deltaTime, glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(sun->dir, 1.f);
     }
-    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (action == GLFW_RELEASE) return;
+    if (key == GLFW_KEY_M) {
+        if (gui_Active) {
+            gui_Active = false;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+        else {
+            gui_Active = true;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
     }
-    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    if (key ==GLFW_KEY_X)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if (key == GLFW_KEY_C)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    if (key == GLFW_KEY_B) {
+        sp->setBool("blinn", true);
     }
+    if (key == GLFW_KEY_P) {
+        sp->setBool("blinn", false);
+    }
+
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
-    if (firstMouse) // initially set to true
-    {
+    if (!gui_Active) {
+        if (firstMouse) // initially set to true
+        {
+            lastX = xpos;
+            lastY = ypos;
+            firstMouse = false;
+        }
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
         lastX = xpos;
         lastY = ypos;
-        firstMouse = false;
+
+        const float sensitivity = 0.1f;
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        yaw += xoffset;
+        pitch += yoffset;
+
+        if (pitch > 89.0f)
+            pitch = 89.0f;
+        if (pitch < -89.0f)
+            pitch = -89.0f;
+
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        direction.y = sin(glm::radians(pitch));
+        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        camFront = glm::normalize(direction);
     }
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
-    lastX = xpos;
-    lastY = ypos;
-
-    const float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    camFront = glm::normalize(direction);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -425,6 +434,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     fov -= (float)yoffset;
     if (fov < 1.0f)
         fov = 1.0f;
-    if (fov > 45.0f)
-        fov = 45.0f;
+    if (fov > 90.0f)
+        fov = 90.0f;
 }
