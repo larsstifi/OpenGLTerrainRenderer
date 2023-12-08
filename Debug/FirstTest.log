@@ -1,0 +1,4 @@
+﻿Quelle.obj : error LNK2019: Verweis auf nicht aufgelöstes externes Symbol "_glfwInit" in Funktion "_main".
+Quelle.obj : error LNK2019: Verweis auf nicht aufgelöstes externes Symbol "_glfwWindowHint" in Funktion "_main".
+C:\Users\LarsStiefelmeyer\OneDrive - ETH Zurich\Projects\OpenGL\glfw-3.3.8\src\Debug\glfw3.lib : warning LNK4272: Bibliothekcomputertyp "x64" steht in Konflikt mit dem Zielcomputertyp "x86"
+C:\Users\LarsStiefelmeyer\OneDrive - ETH Zurich\Projects\OpenGL\Tests\FirstTest\Debug\FirstTest.exe : fatal error LNK1120: 2 nicht aufgelöste Externe

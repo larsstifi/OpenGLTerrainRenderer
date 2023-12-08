@@ -15,22 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Quelle.cpp">
+    <ClCompile Include="src\Quelle.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="glad.c">
+    <ClCompile Include="src\ShaderProgram.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="ShaderProgram.cpp">
+    <ClCompile Include="src\Models\MeshRenderer.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="Models\MeshRenderer.cpp">
+    <ClCompile Include="src\Models\Model.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="Models\Model.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="Lighting\LightManager.cpp">
+    <ClCompile Include="src\Lighting\LightManager.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="imgui\imgui.cpp">
@@ -57,42 +54,42 @@
     <ClCompile Include="imgui\imgui_stdlib.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="Terrain\NoiseGenerator.cpp">
+    <ClCompile Include="src\Terrain\NoiseGenerator.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="Terrain\DualContouring.cpp">
+    <ClCompile Include="src\Terrain\DualContouring.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="Terrain\TerrainChunk.cpp">
+    <ClCompile Include="src\Terrain\TerrainChunk.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="Terrain\Octree.cpp">
+    <ClCompile Include="src\Terrain\Octree.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="Models\Renderer.cpp">
+    <ClCompile Include="src\Models\Renderer.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="Plane.cpp">
+    <ClCompile Include="src\Plane.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="inc\glad\glad.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stb_image.h">
+    <ClInclude Include="src\Shaders\ShaderProgram.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Shaders\ShaderProgram.h">
+    <ClInclude Include="src\Models\MeshRenderer.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Models\MeshRenderer.h">
+    <ClInclude Include="src\Models\Model.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Models\Model.h">
+    <ClInclude Include="src\Models\OBJ_Loader.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Models\OBJ_Loader.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="Lighting\LightManager.h">
+    <ClInclude Include="src\Lighting\LightManager.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imconfig.h">
@@ -125,37 +122,37 @@
     <ClInclude Include="imgui\imgui_stdlib.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Terrain\NoiseGenerator.h">
+    <ClInclude Include="src\Terrain\NoiseGenerator.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Models\Drawable.h">
+    <ClInclude Include="src\Models\Drawable.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Terrain\DualContouring.h">
+    <ClInclude Include="src\Terrain\DualContouring.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Terrain\TerrainChunk.h">
+    <ClInclude Include="src\Terrain\TerrainChunk.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Terrain\Octree.h">
+    <ClInclude Include="src\Terrain\Octree.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Models\Renderer.h">
+    <ClInclude Include="src\Models\Renderer.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Plane.h">
+    <ClInclude Include="src\Plane.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\fragment.frag" />
-    <None Include="Shaders\vs.vert" />
-    <None Include="Shaders\Foliage.geom" />
-    <None Include="Shaders\Foliage.frag" />
-    <None Include="Shaders\Foliage.vert" />
-    <None Include="Shaders\Debug.vert" />
-    <None Include="Shaders\Debug.geom" />
-    <None Include="Shaders\Debug.frag" />
+    <None Include="src\Shaders\fragment.frag" />
+    <None Include="src\Shaders\vs.vert" />
+    <None Include="src\Shaders\Foliage.geom" />
+    <None Include="src\Shaders\Foliage.frag" />
+    <None Include="src\Shaders\Foliage.vert" />
+    <None Include="src\Shaders\Debug.vert" />
+    <None Include="src\Shaders\Debug.geom" />
+    <None Include="src\Shaders\Debug.frag" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\..\..\Libraries\cpp\Build\FastNoise2\bin\FastNoise.dll" />
