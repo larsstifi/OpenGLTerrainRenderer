@@ -1,5 +1,5 @@
 #include "Renderer.h"
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 void Renderer::RenderObjects()
 {

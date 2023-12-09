@@ -1,7 +1,7 @@
 #pragma once
 #include <Models/Drawable.h>
 #include <Models/MeshRenderer.h>
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 class Plane : public Drawable
 {

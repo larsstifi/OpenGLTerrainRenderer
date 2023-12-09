@@ -29,3 +29,4 @@
 .vs/
 bin/
 bin-int/
+vcpkg_installed/

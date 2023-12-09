@@ -6,7 +6,7 @@
 #include<glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include <stack>
-#include <imgui/imgui.h>
+#include <imgui.h>
 #include <thread>
 #include <queue>
 #include <memory>

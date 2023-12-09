@@ -1,9 +1,9 @@
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
-#include <imgui/imgui.h>
-#include <imgui/imgui_stdlib.h>
-#include <imgui/imgui_impl_opengl3.h>
-#include <imgui/imgui_impl_glfw.h>
+#include <imgui.h>
+#include <imgui_stdlib.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_glfw.h>
 #include <Shaders/ShaderProgram.h>
 #include <Models/MeshRenderer.h>
 #include <Models/Model.h>
