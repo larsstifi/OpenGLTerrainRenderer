@@ -139,7 +139,7 @@ void createObjects() {
 
     uint32_t matIndex = renderer->addMaterial(mat);
 
-    octree = std::make_shared<Octree>(5);
+    octree = std::make_shared<Octree>(10);
     renderer->addObject(octree, matIndex);
     objects.push_back(octree);
 

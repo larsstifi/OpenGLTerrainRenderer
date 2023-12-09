@@ -12,8 +12,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "glm/gtx/hash.hpp"
 
-#include <Models\OBJ_Loader.h>
-
 namespace dc{
 	struct Vertex {
 		glm::vec3 pos;
