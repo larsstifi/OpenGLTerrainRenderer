@@ -18,13 +18,7 @@
     <ClCompile Include="src\Main.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="src\ShaderProgram.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="src\Models\MeshRenderer.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Models\Model.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="src\Lighting\LightManager.cpp">
@@ -46,6 +40,9 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="src\Plane.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shaders\ShaderProgram.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
@@ -126,6 +123,7 @@
     <None Include="src\Shaders\Debug.vert" />
     <None Include="src\Shaders\Debug.geom" />
     <None Include="src\Shaders\Debug.frag" />
+    <None Include="src\Shaders\fragmentTriplanar.frag" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\FastNoise.dll" />

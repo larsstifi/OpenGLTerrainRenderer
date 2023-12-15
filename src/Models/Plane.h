@@ -10,8 +10,8 @@ class Plane : public Drawable
 	MeshRenderer meshRenderer;
 public:
 	Plane(glm::vec3 pos, glm::vec2 dim);
-	void draw(ShaderProgram& shader, glm::mat4& model, bool setMat = true);
-	void drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat = true);
+	void draw(unsigned int spID, glm::mat4& model);
+	void drawInstanced(unsigned int spID, glm::mat4& model, unsigned int count);
 	void drawImgui();
 };
 

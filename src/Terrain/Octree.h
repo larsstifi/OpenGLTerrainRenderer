@@ -11,7 +11,7 @@
 #include <queue>
 #include <memory>
 
-#define MAX_CHUNKS_READ_PER_FRAME 1
+#define MAX_CHUNKS_READ_PER_FRAME 4
 #define MAX_CHUNKS_GEN_PER_FRAME 8
 #define MAX_CHUNKS_IN_GENERATION 8
 struct OctreeNode {
@@ -30,11 +30,17 @@ public:
 	ImGuiTextBuffer gui_Cout;
 	glm::vec3 playerPos = glm::vec3(0.f);
 	glm::vec3 octreePos = glm::vec3(0.f);
-	Octree(uint32_t treeDepth) : TreeDepth(treeDepth) { root.depth = TreeDepth; ng.setScale(NoiseScale); octreePos = glm::vec3(-(1 << (treeDepth - 1)));};
+	Octree(uint32_t treeDepth) : TreeDepth(treeDepth) {
+		root.depth = TreeDepth;
+		ng.setScale(NoiseScale);
+		ng.setGain(NoiseGain);
+		ng.setLacunarity(NoiseLacunarity);
+		octreePos = glm::vec3(-(1 << (treeDepth - 1)));
+	};
 	~Octree();
-	void draw(ShaderProgram& shader, glm::mat4& model, bool setMat = true);
+	void draw(unsigned int spID, glm::mat4& model);
 	void Update();
-	void drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat = true);
+	void drawInstanced(unsigned int spID, glm::mat4& model, unsigned int count);
 	void drawImgui();
 	void setDepth(unsigned int depth) { TreeDepth = depth; };
 private:
@@ -46,8 +52,8 @@ private:
 	int chunkSize =  16;
 	float TerrainScale = 1.f; 
 	float NoiseScale = 0.5f;
-	float NoiseGain = 1.f;
-	float NoiseLacunarity = 1.f;
+	float NoiseGain = 0.9f;
+	float NoiseLacunarity = 0.9f;
 	bool UpdateTerrain = true;
 	void clearNode(OctreeNode* node);
 	void clearChildren(OctreeNode* node);

@@ -17,8 +17,8 @@ public:
     TerrainChunk() { this->pos = glm::vec3(0); mesh.vertices = std::vector<dc::Vertex>();   mesh.indices = std::vector<unsigned int>(); }
     TerrainChunk(glm::vec3 pos) { this->pos = pos; mesh.vertices = std::vector<dc::Vertex>();   mesh.indices = std::vector<unsigned int>();}
     void setMat(unsigned int texture);
-	void draw(ShaderProgram& shader, glm::mat4& model, bool setMat = true);
-	void drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat = true);
+	void draw(unsigned int spID, glm::mat4& model);
+	void drawInstanced(unsigned int spID, glm::mat4& model, unsigned int count);
     void generateChunk(NoiseGenerator ng, unsigned int size, float freq = 0.2f, float scale = 1.f, int seed = 0);
     void fillBuffers();
     void clear();

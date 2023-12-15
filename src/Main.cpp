@@ -37,7 +37,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 std::string readFile(const char* filePath);
 
 const char * vertexShaderPath = "src/Shaders/vs.vert";
-const char* fragmentShaderPath = "src/Shaders/fragment.frag";
+const char* fragmentShaderPath = "src/Shaders/fragmentTriplanar.frag";
 
 unsigned int windowWidth = 2000;
 unsigned int windowHeight = 1500;
@@ -46,12 +46,9 @@ glm::vec3 bgCol(0.2f, 0.2f, 0.2f);
 GLFWwindow* window;
 
 Renderer* renderer;
-std::shared_ptr<ShaderProgram> sp;
-std::shared_ptr<ShaderProgram> dsp;
 
  
 std::shared_ptr<Octree> octree;
-std::shared_ptr<Model> refModel;
 std::vector<std::shared_ptr<Drawable>> objects;
 
 glm::vec3 positions[] = {
@@ -131,28 +128,18 @@ int main()
 
 void createObjects() {
     std::shared_ptr<RenderMaterial> mat = std::make_shared<RenderMaterial>();
+    mat->spID = ShaderProgram::loadShaderProgram(vertexShaderPath, fragmentShaderPath);
     mat->matType = OPAQUE;
-    mat->DiffuseTexture = Model::loadTexture("src/Models/Solid_white.jpg");
-    mat->AmbientTexture = Model::loadTexture("src/Models/Solid_white.jpg");
-    mat->SpecularTexture = Model::loadTexture("src/Models/Solid_white.jpg");
-    mat->AlphaTexture = Model::loadTexture("src/Models/Solid_white.jpg");
+    mat->DiffuseTexture = renderer->loadTexture("src/Models/grass_texture_2.png");
+    mat->AmbientTexture = renderer->loadTexture("src/Models/grass_texture_2.png");
+    mat->SpecularTexture = renderer->loadTexture("src/Models/grass_texture_2.png");
+    mat->AlphaTexture = renderer->loadTexture("src/Models/Solid_white.jpg");
 
     uint32_t matIndex = renderer->addMaterial(mat);
 
     octree = std::make_shared<Octree>(10);
     renderer->addObject(octree, matIndex);
     objects.push_back(octree);
-
-
-    std::shared_ptr<Plane> plane = std::make_shared<Plane>(glm::vec3(0), glm::vec2(100));
-    renderer->addObject(plane, matIndex);
-    objects.push_back(plane);
-
-    refModel = std::make_shared<Model>("src/Models/Tree/tree low.obj", "src/Models/Solid_white.jpg");
-    std::shared_ptr<RenderMaterial> mat2 = std::make_shared<RenderMaterial>();
-    matIndex = renderer->addMaterial(mat2);
-    renderer->addObject(refModel, matIndex);
-    objects.push_back(refModel);
 
 }
 
@@ -170,7 +157,7 @@ void RenderImgui() {
         renderer->RenderImgui();
 
         // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("Background color", (float*)&bgCol); // Edit 3 floats representing a color
+        if(ImGui::ColorEdit3("Background color", (float*)&bgCol)) glClearColor(bgCol.x, bgCol.y, bgCol.z, 0.f); // Edit 3 floats representing a color
         ImGui::ColorEdit3("Sun color", (float*)&sun->color);
         ImGui::ColorEdit3("Headlight color", (float*)&headlight->color);
     }
@@ -212,16 +199,12 @@ void RenderImgui() {
         ImGui::ShowDemoWindow(&gui_DemoWindow);
     }
 
-    
-    
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void Render() {
     //set background color
-    glClearColor(bgCol.x, bgCol.y, bgCol.z, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -230,8 +213,7 @@ void Render() {
         camFront + camPos,
         camUp);
 
-    projection = glm::perspective(glm::radians(fov), ((float)windowWidth) / windowHeight, 0.1f, 1000.f);
-
+    projection = glm::perspective(glm::radians(fov), ((float)windowWidth) / windowHeight, 0.1f, 10000.f);
     renderer->view = view;
     renderer->camPos = camPos;
     renderer->projection = projection;
@@ -289,21 +271,10 @@ bool Setup() {
     ImGui_ImplOpenGL3_Init("#version 330");
 
     //setup generel object shader
-    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClearColor(bgCol.x, bgCol.y, bgCol.z, 0.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
 
-    sp = std::make_shared<ShaderProgram>(vertexShaderPath, fragmentShaderPath);
-    sp->setInt("AmbientTexture", 0);
-    sp->setInt("DiffuseTexture", 1);
-    sp->setInt("SpecularTexture", 2);
-    sp->setInt("SpecularHighlightTexture", 3);
-    sp->setInt("AlphaTexture", 4);
-    sp->setInt("BumpTexture", 5);
-    sp->setBool("blinn", true);
-    dsp = std::make_shared<ShaderProgram>("src/Shaders/Debug.vert", "src/Shaders/Debug.geom", "src/Shaders/Debug.frag");
-    dsp->use();
-    dsp->setInt("texture1", 0);
     
     //setup cam position
     camPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -311,9 +282,7 @@ bool Setup() {
     camUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     //setup renderers
-    renderer = new Renderer(sp);
-    renderer->debugShader = dsp;
-    renderer->debugTexture = Model::loadTexture("src/Models/debug-texture.png", 1);
+    renderer = new Renderer();
 
     //setup lights
     sun = std::shared_ptr<DirectionalLight>(new DirectionalLight());
@@ -386,12 +355,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     if (key == GLFW_KEY_C)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    if (key == GLFW_KEY_B) {
-        sp->setBool("blinn", true);
-    }
-    if (key == GLFW_KEY_P) {
-        sp->setBool("blinn", false);
-    }
 
 }
 

@@ -4,7 +4,7 @@
 
 class Drawable {
 public:
-	virtual void draw(ShaderProgram& shader, glm::mat4& model, bool setMat = true) = 0;
-	virtual void drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat = true) = 0;
+	virtual void draw(unsigned int spID, glm::mat4& model) = 0;
+	virtual void drawInstanced(unsigned int spID, glm::mat4& model, unsigned int count) = 0;
 	virtual void drawImgui() {};
 };

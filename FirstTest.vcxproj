@@ -108,11 +108,10 @@
   <ItemGroup>
     <ClCompile Include="src\Lighting\LightManager.cpp" />
     <ClCompile Include="src\Models\MeshRenderer.cpp" />
-    <ClCompile Include="src\Models\Model.cpp" />
     <ClCompile Include="src\Models\Renderer.cpp" />
     <ClCompile Include="src\Plane.cpp" />
     <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\ShaderProgram.cpp" />
+    <ClCompile Include="src\Shaders\ShaderProgram.cpp" />
     <ClCompile Include="src\Terrain\DualContouring.cpp" />
     <ClCompile Include="src\Terrain\NoiseGenerator.cpp" />
     <ClCompile Include="src\Terrain\Octree.cpp" />
@@ -155,6 +154,7 @@
     <None Include="src\Shaders\Foliage.vert" />
     <None Include="src\Shaders\fragment.frag" />
     <None Include="src\Shaders\Foliage.geom" />
+    <None Include="src\Shaders\fragmentTriplanar.frag" />
     <None Include="src\Shaders\vs.vert" />
   </ItemGroup>
   <ItemGroup>

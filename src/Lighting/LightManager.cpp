@@ -66,75 +66,73 @@ void LightManager::removeLight(int id)
     }
 }
 
-void LightManager::setLights(ShaderProgram& shaderProgram)
+void LightManager::setLights(unsigned int spID)
 {
-    shaderProgram.use();
-    shaderProgram.setInt("SpotLightAmt", spotLights.size());
-    shaderProgram.setInt("PointLightAmt", pointLights.size());
-    shaderProgram.setInt("DirectionalLightAmt", directionalLights.size());
+    ShaderProgram::setInt(spID, "SpotLightAmt", spotLights.size());
+    ShaderProgram::setInt(spID, "PointLightAmt", pointLights.size());
+    ShaderProgram::setInt(spID, "DirectionalLightAmt", directionalLights.size());
     for (size_t i = 0; i < directionalLights.size(); i++)
     {
-        setLight(shaderProgram, *(directionalLights[i]));
+        setLight(spID, *(directionalLights[i]));
     }
     for (size_t i = 0; i < spotLights.size(); i++)
     {
-        setLight(shaderProgram, *(spotLights[i]));
+        setLight(spID, *(spotLights[i]));
     }
     for (size_t i = 0; i < pointLights.size(); i++)
     {
-        setLight(shaderProgram, *(pointLights[i]));
+        setLight(spID, *(pointLights[i]));
     }
 }
 
-void LightManager::setLight(ShaderProgram& shaderProgram, int id)
+void LightManager::setLight(unsigned int spID, int id)
 {
-    shaderProgram.setInt("SpotLightAmt", maxSpotAmt);
-    shaderProgram.setInt("PointLightAmt", maxPointAmt);
-    shaderProgram.setInt("DirectionalLightAmt", maxDirectionalAmt);
+    ShaderProgram::setInt(spID, "SpotLightAmt", maxSpotAmt);
+    ShaderProgram::setInt(spID, "PointLightAmt", maxPointAmt);
+    ShaderProgram::setInt(spID, "DirectionalLightAmt", maxDirectionalAmt);
     if (id < maxSpotAmt) {
-        setLight(shaderProgram, *getSpotLight(id));
+        setLight(spID, *getSpotLight(id));
         return;
     }
     if (id < maxPointAmt) {
-        setLight(shaderProgram, *getPointLight(id));
+        setLight(spID, *getPointLight(id));
         return;
     }
-    setLight(shaderProgram, *getDirectionalLight(id));
+    setLight(spID, *getDirectionalLight(id));
 }
 
-void LightManager::setLight(ShaderProgram& shaderProgram, SpotLight& light)
+void LightManager::setLight(unsigned int spID, SpotLight& light)
 {
     std::string loc = "SpotLights[";
     loc += std::to_string(light.ID);
     loc += "].";
-    shaderProgram.setVec3(loc + "pos", light.pos);
-    shaderProgram.setVec3(loc + "dir", light.dir);
-    shaderProgram.setVec3(loc + "color", light.color);
-    shaderProgram.setFloat(loc + "constant", light.constant);
-    shaderProgram.setFloat(loc + "linear", light.linear);
-    shaderProgram.setFloat(loc + "quadratic", light.quadratic);
-    shaderProgram.setFloat(loc + "cutOff", light.cutOff);
-    shaderProgram.setFloat(loc + "outerCutOff", light.outerCutOff);
+    ShaderProgram::setVec3(spID, loc + "pos", light.pos);
+    ShaderProgram::setVec3(spID, loc + "dir", light.dir);
+    ShaderProgram::setVec3(spID, loc + "color", light.color);
+    ShaderProgram::setFloat(spID, loc + "constant", light.constant);
+    ShaderProgram::setFloat(spID, loc + "linear", light.linear);
+    ShaderProgram::setFloat(spID, loc + "quadratic", light.quadratic);
+    ShaderProgram::setFloat(spID, loc + "cutOff", light.cutOff);
+    ShaderProgram::setFloat(spID, loc + "outerCutOff", light.outerCutOff);
 }
-void LightManager::setLight(ShaderProgram& shaderProgram, DirectionalLight& light)
+void LightManager::setLight(unsigned int spID, DirectionalLight& light)
 {
-    shaderProgram.use();
     std::string loc = "DirectionalLights[";
     loc += std::to_string(light.ID - maxSpotAmt - maxPointAmt);
     loc += "].";
-    shaderProgram.setVec3(loc + "dir", light.dir);
-    shaderProgram.setVec3(loc + "color", light.color);
+    ShaderProgram::setVec3(spID, loc + "dir", light.dir);
+    ShaderProgram::setVec3(spID, loc + "color", light.color);
 }
-void LightManager::setLight(ShaderProgram& shaderProgram, PointLight& light)
+void LightManager::setLight(unsigned int spID, PointLight& light)
 {
     std::string loc = "PointLights[";
     loc += std::to_string(light.ID - maxSpotAmt);
     loc += "].";
-    shaderProgram.setVec3(loc + "pos", light.pos);
-    shaderProgram.setVec3(loc + "color", light.color);
-    shaderProgram.setFloat(loc + "constant", light.constant);
-    shaderProgram.setFloat(loc + "linear", light.linear);
-    shaderProgram.setFloat(loc + "quadratic", light.quadratic);
+    ShaderProgram::setVec3(spID, loc + "pos", light.pos);
+    ShaderProgram::setVec3(spID, loc + "color", light.color);
+    ShaderProgram::setFloat(spID, loc + "constant", light.constant);
+    ShaderProgram::setFloat(spID, loc + "linear", light.linear);
+    ShaderProgram::setFloat(spID, loc + "quadratic", light.quadratic);
 }
 
 std::shared_ptr<SpotLight> LightManager::getSpotLight(int id) {

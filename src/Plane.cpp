@@ -17,22 +17,20 @@ Plane::Plane(glm::vec3 pos, glm::vec2 dim) : pos(pos), dim(dim){
 	meshRenderer = MeshRenderer();
 	meshRenderer.fillBuffers(vertices, indices);
 }
-void Plane::draw(ShaderProgram& shader, glm::mat4& model, bool setMat)
+void Plane::draw(unsigned int spID, glm::mat4& model)
 {
-	shader.use();
 	model = glm::translate(model, pos);
 	model = glm::scale(model, glm::vec3(dim.x, 1, dim.y));
 	
-	shader.setMat4("model", model);
+	ShaderProgram::setMat4(spID, "model", model);
 	
 	meshRenderer.draw();
 }
-void Plane::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat)
+void Plane::drawInstanced(unsigned int spID, glm::mat4& model, unsigned int count)
 {
-	shader.use();
 	model = glm::translate(model, pos);
 	model = glm::scale(model, glm::vec3(dim, 1));
-	shader.setMat4("model", model);
+	ShaderProgram::setMat4(spID, "model", model);
 
 	meshRenderer.drawInstanced(count);
 }

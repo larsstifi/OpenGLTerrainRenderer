@@ -136,7 +136,7 @@ void Octree::Update()
 	}
 }
 
-void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat)
+void Octree::draw(unsigned int spID, glm::mat4& model)
 {
 	for (OctreeNode* curNode : activeNodes) {
 		glm::mat4 modelMat(1.f);
@@ -145,11 +145,11 @@ void Octree::draw(ShaderProgram& shader, glm::mat4& model, bool setMat)
 		modelMat = glm::scale(modelMat, glm::vec3(1 << curNode->depth));
 
 		modelMat = model * modelMat;
-		curNode->tc->draw(shader, modelMat, setMat);
+		curNode->tc->draw(spID, modelMat);
 	}
 
 }
-void Octree::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat)
+void Octree::drawInstanced(unsigned int spID, glm::mat4& model, unsigned int count)
 {
 	for (OctreeNode* curNode : activeNodes) {
 		glm::mat4 modelMat(1.f);
@@ -158,7 +158,7 @@ void Octree::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int
 		modelMat = glm::scale(modelMat, glm::vec3(1 << curNode->depth));
 
 		modelMat = model * modelMat;
-		curNode->tc->drawInstanced(shader, modelMat, count, setMat);
+		curNode->tc->drawInstanced(spID, modelMat, count);
 	}
 }
 void Octree::drawImgui()

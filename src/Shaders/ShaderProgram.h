@@ -17,28 +17,31 @@
 
 #include <Models\OBJ_Loader.h>
 
-class ShaderProgram
+struct LoadedShader {
+    unsigned int id = 0;
+    std::string geomShaderPath = "";
+    std::string vertShaderPath = "";
+    std::string fragShaderPath = "";
+
+};
+static std::vector<LoadedShader> loadedShaders;
+
+static class ShaderProgram
 {
-
+private:
+    
 public:
-
-    // the program ID
-    unsigned int ID = 0;
-
     // constructor reads and builds the shader
-    ShaderProgram();
-    ~ShaderProgram();
-    ShaderProgram(const char* vertexPath, const char* fragmentPath);
-    ShaderProgram(const char* vertexPath, const char * geometryPath, const char* fragmentPath);
+    static unsigned int loadShaderProgram(std::string vertShaderPath, std::string fragShaderPath, std::string geomShaderPath = "");
     // use/activate the shader
-    void use();
+    static void use(unsigned int ID);
     // utility uniform functions
-    void setBool(const std::string& name, bool value) const;
-    void setInt(const std::string& name, int value) const;
-    void setFloat(const std::string& name, float value) const;
-    void setVec3(const std::string& name, const glm::vec3& value) const;
-    void setVec3(const std::string& name, const objl::Vector3& value) const;
-    void setMat4(const std::string& name, const glm::mat4& value) const;
+    static void setBool(unsigned int ID, const std::string& name, bool value);
+    static void setInt(unsigned int ID, const std::string& name, int value);
+    static void setFloat(unsigned int ID, const std::string& name, float value);
+    static void setVec3(unsigned int ID, const std::string& name, const glm::vec3& value);
+    static void setVec3(unsigned int ID, const std::string& name, const objl::Vector3& value);
+    static void setMat4(unsigned int ID, const std::string& name, const glm::mat4& value);
 };
 
 

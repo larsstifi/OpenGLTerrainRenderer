@@ -9,9 +9,8 @@ std::vector<Texture> loadedTextures;
 
 
 
-void Model::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
-    shader.use();
-    shader.setMat4("model", model);
+void Model::draw(unsigned int spID, glm::mat4& modelt) {
+    shader.setMat4(spID,"model", model);
     Material activeMat;
 	for (unsigned int i = 0; i < meshes.size(); i++) {
         if (setMat && activeMat.name != materials[matIndices[i]].name) {
@@ -43,7 +42,7 @@ void Model::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
 	}
 }
 
-void Model::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat) {
+void Model::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count) {
     shader.use();
     shader.setMat4("model", model);
     Material activeMat;

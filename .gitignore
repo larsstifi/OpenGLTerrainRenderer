@@ -30,3 +30,5 @@
 bin/
 bin-int/
 vcpkg_installed/
+
+TODO.txt

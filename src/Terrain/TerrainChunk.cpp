@@ -1,15 +1,13 @@
 #include<Terrain/TerrainChunk.h>
 
 
-void TerrainChunk::draw(ShaderProgram& shader, glm::mat4& model, bool setMat) {
-	shader.use();
-	shader.setMat4("model", model);
+void TerrainChunk::draw(unsigned int spID, glm::mat4& model) {
+	ShaderProgram::setMat4(spID, "model", model);
 
 	meshRenderer.draw();
 }
-void TerrainChunk::drawInstanced(ShaderProgram& shader, glm::mat4& model, unsigned int count, bool setMat) {
-	shader.use();
-	shader.setMat4("model", model);
+void TerrainChunk::drawInstanced(unsigned int spID, glm::mat4& model, unsigned int count) {
+	ShaderProgram::setMat4(spID, "model", model);
 
 	meshRenderer.drawInstanced(count);
 }

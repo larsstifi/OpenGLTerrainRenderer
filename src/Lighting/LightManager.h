@@ -64,11 +64,11 @@ public:
 
     void removeLight(int id);
 
-    void setLights(ShaderProgram& shaderProgram);
-    void setLight(ShaderProgram& shaderProgram, int id);
-    void setLight(ShaderProgram& shaderProgram, SpotLight& light);
-    void setLight(ShaderProgram& shaderProgram, PointLight& light);
-    void setLight(ShaderProgram& shaderProgram, DirectionalLight& light);
+    void setLights(unsigned int spID);
+    void setLight(unsigned int spID, int id);
+    void setLight(unsigned int spID, SpotLight& light);
+    void setLight(unsigned int spID, PointLight& light);
+    void setLight(unsigned int spID, DirectionalLight& light);
 private:
     std::stack<int> directionalIdTracker, pointIdTracker, spotIdTracker;
     

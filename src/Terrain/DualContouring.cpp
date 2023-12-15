@@ -65,7 +65,7 @@ Mesh dc::generateMesh(std::vector<float>& density, unsigned int gridSize)
 				Vertex newVertex;
 				newVertex.pos = vertPos;
 				newVertex.norm = glm::normalize(norm);
-				newVertex.uv = glm::vec2(i,j);
+				newVertex.uv = glm::vec2(i,k);
 				vertices.push_back(newVertex);
 
 
