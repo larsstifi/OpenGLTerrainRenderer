@@ -14,31 +14,13 @@ void Renderer::RenderObjects()
 		RenderMaterial mat = *materials[curMatIndex].get();
 		if (activeMat != curMatIndex) {
 			activeMat = curMatIndex;
-			if (materials[activeMat]->matType != DISABLED) {
+			if (mat.matType != DISABLED) {
 				ShaderProgram::use(mat.spID);
 				ShaderProgram::setMat4(mat.spID, "view", view);
 				ShaderProgram::setMat4(mat.spID, "projection", projection);
 				ShaderProgram::setVec3(mat.spID, "viewPos", camPos);
 				lightManager->setLights(mat.spID);
-				ShaderProgram::setVec3(mat.spID, "AmbientColor", mat.AmbientColor);
-				ShaderProgram::setVec3(mat.spID, "DiffuseColor", mat.DiffuseColor);
-				ShaderProgram::setVec3(mat.spID, "SpecularColor", mat.SpecularColor);
-				ShaderProgram::setFloat(mat.spID, "SpecularExponent", mat.SpecularExponent);
-				ShaderProgram::setFloat(mat.spID, "OpticalDensity", mat.OpticalDensity);
-				ShaderProgram::setFloat(mat.spID, "Dissolve", mat.Dissolve);
-				ShaderProgram::setFloat(mat.spID, "Illumination", mat.Illumination);
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, mat.AmbientTexture);
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, mat.DiffuseTexture);
-				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, mat.SpecularTexture);
-				glActiveTexture(GL_TEXTURE3);
-				glBindTexture(GL_TEXTURE_2D, mat.SpecularHightlightTexture);
-				glActiveTexture(GL_TEXTURE4);
-				glBindTexture(GL_TEXTURE_2D, mat.AlphaTexture);
-				glActiveTexture(GL_TEXTURE5);
-				glBindTexture(GL_TEXTURE_2D, mat.BumpTexture);
+				mat.setShaderParams();
 			}
 		}
 		glm::mat4 model = glm::mat4(1.f);
@@ -56,8 +38,6 @@ void Renderer::Render()
 void Renderer::RenderImgui()
 {
 	ImGui::Checkbox("Show Objects", &gui_RenderObjects);
-	ImGui::SameLine();
-	ImGui::Checkbox("Show Debug", &gui_RenderDebug);
 }
 
 
@@ -98,7 +78,7 @@ unsigned int Renderer::loadTexture(std::string filePath, int mode) {
 	for (int i = 0; i < loadedTextures.size(); i++)
 	{
 		if (loadedTextures[i].path == filePath) {
-			std::cout << "Old Texture at " << filePath << std::endl;
+			std::cout << "Old Texture at " << filePath << " with id " << loadedTextures[i].id << std::endl;
 			return loadedTextures[i].id;
 		}
 	}
@@ -138,7 +118,7 @@ unsigned int Renderer::loadTexture(std::string filePath, int mode) {
 			format = GL_RGBA;
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
-		std::cout << "New Texture at " << filePath << " Number of Channels: " << nrChannels << std::endl;
+		std::cout << "New Texture at " << filePath << " with id " << texture << " Number of Channels: " << nrChannels << std::endl;
 	}
 	else
 	{

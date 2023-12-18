@@ -9,46 +9,107 @@ enum MAT_TYPE {
 	OPAQUE
 };
 struct ShaderTexture {
-    unsigned int index;
-    unsigned int tex;
+    ShaderTexture(GLenum paramIndex, unsigned int textureID) : paramIndex(paramIndex), textureID(textureID) {};
+    GLenum paramIndex;
+    unsigned int textureID;
 };
 struct ShaderVec3 {
+    ShaderVec3(std::string paramName, glm::vec3 val) : paramName(paramName), val(val) {};
     std::string paramName;
     glm::vec3 val;
 };
 struct ShaderFloat {
+    ShaderFloat(std::string paramName, float val) : paramName(paramName), val(val) {};
     std::string paramName;
     float val;
 };
-union ShaderParamData {
-    ShaderVec3 sv3;
-    ShaderFloat f;
-    ShaderTexture tex;
+struct ShaderBool {
+    ShaderBool(std::string paramName, bool val) : paramName(paramName), val(val) {};
+    std::string paramName;
+    bool val;
 };
 enum ShaderParamType {
     VEC3,
     FLOAT,
-    TEXTURE
+    TEXTURE,
+    BOOL
+};
+struct ShaderParam {
+    ShaderParam() {};
+    ShaderParam(const ShaderParam& sp) : type(sp.type) {
+        switch (type) {
+        case VEC3:
+            new (&v3) ShaderVec3(sp.v3);
+            break;
+        case FLOAT:
+            new (&f) ShaderFloat(sp.f);
+            break;
+        case TEXTURE:
+            new (&tex) ShaderTexture(sp.tex);
+            break;
+        case BOOL:
+            new (&b) ShaderBool(sp.b);
+            break;
+        }
+    }
+    ShaderParam(std::string paramName, glm::vec3 val) : v3(ShaderVec3(paramName, val)), type(VEC3) {};
+    ShaderParam(std::string paramName, bool val) : b(ShaderBool(paramName, val)), type(BOOL) {};
+    ShaderParam(std::string paramName, float val) : f(ShaderFloat(paramName, val)), type(FLOAT) {};
+    ShaderParam(GLenum paramIndex, unsigned int tex) : tex(ShaderTexture(paramIndex, tex)), type(TEXTURE) {};
+    ~ShaderParam() {
+        if (type == VEC3)
+        {
+            v3.~ShaderVec3(); 
+        }
+        else if (type == FLOAT)
+        {
+            f.~ShaderFloat();
+        }
+        else if (type == TEXTURE)
+        {
+            tex.~ShaderTexture();
+        }
+        else if (type == BOOL) {
+            b.~ShaderBool();
+        }
+    };
+    ShaderParamType type;
+    union {
+        ShaderVec3 v3;
+        ShaderFloat f;
+        ShaderTexture tex;
+        ShaderBool b;
+    };
+    
 };
 
 struct RenderMaterial {
-    std::shared_ptr<std::vector<std::pair<ShaderParamType, ShaderParamData>>> shaderParams;
+    std::vector<ShaderParam> shaderParams;
     unsigned int spID;
 	MAT_TYPE matType = DISABLED;
-    std::string name;
-    glm::vec3 AmbientColor = glm::vec3(1.f);
-    glm::vec3 DiffuseColor = glm::vec3(1.f);
-    glm::vec3 SpecularColor = glm::vec3(1.f);
-    float SpecularExponent = 1.f;
-    float OpticalDensity = 1.f;
-    float Dissolve = 0.f;
-    int Illumination = 0;
-    unsigned int AmbientTexture = 0;
-    unsigned int DiffuseTexture = 0;
-    unsigned int SpecularTexture = 0;
-    unsigned int SpecularHightlightTexture = 0;
-    unsigned int AlphaTexture = 0;
-    unsigned int BumpTexture = 0;
+    void addTexture(GLenum paramIndex, unsigned int textureID) {
+        shaderParams.push_back(ShaderParam(paramIndex, textureID));
+    }
+    void addFloat(std::string paramName, float val) {
+        shaderParams.push_back(ShaderParam(paramName, val));
+    }
+    void addBool(std::string paramName, bool val) {
+        shaderParams.push_back(ShaderParam(paramName, val));
+    }
+    void addVec3(std::string paramName, glm::vec3 val) {
+        shaderParams.push_back(ShaderParam(paramName, val));
+    }
+    void setShaderParams() {
+        ShaderProgram::use(spID);
+        for (int i = 0; i < shaderParams.size(); i++) {
+            if (shaderParams[i].type == FLOAT) ShaderProgram::setFloat(spID, shaderParams[i].f.paramName, shaderParams[i].f.val);
+            if (shaderParams[i].type == VEC3) ShaderProgram::setVec3(spID, shaderParams[i].v3.paramName, shaderParams[i].v3.val);
+            if (shaderParams[i].type == TEXTURE) {
+                glActiveTexture(shaderParams[i].tex.paramIndex);
+                glBindTexture(GL_TEXTURE_2D, shaderParams[i].tex.textureID);
+            }
+        }
+    }
 };
 
 

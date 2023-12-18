@@ -11,6 +11,7 @@
 #include <Terrain/NoiseGenerator.h>
 #include <Terrain/TerrainChunk.h>
 #include <Terrain/Octree.h>
+#include <Terrain/SVO.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
@@ -49,6 +50,7 @@ Renderer* renderer;
 
  
 std::shared_ptr<Octree> octree;
+std::shared_ptr<SVO> svo;
 std::vector<std::shared_ptr<Drawable>> objects;
 
 glm::vec3 positions[] = {
@@ -73,10 +75,6 @@ float yaw, pitch;
 
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
-
-
-FastNoise::SmartNode<> fnGenerator;
-NoiseGenerator noiseGenerator;
 
 //imgui params
 
@@ -130,16 +128,33 @@ void createObjects() {
     std::shared_ptr<RenderMaterial> mat = std::make_shared<RenderMaterial>();
     mat->spID = ShaderProgram::loadShaderProgram(vertexShaderPath, fragmentShaderPath);
     mat->matType = OPAQUE;
-    mat->DiffuseTexture = renderer->loadTexture("src/Models/grass_texture_2.png");
-    mat->AmbientTexture = renderer->loadTexture("src/Models/grass_texture_2.png");
-    mat->SpecularTexture = renderer->loadTexture("src/Models/grass_texture_2.png");
-    mat->AlphaTexture = renderer->loadTexture("src/Models/Solid_white.jpg");
-
+    mat->addTexture(GL_TEXTURE0, renderer->loadTexture("src/Models/grass_texture_2.png"));
+    mat->addTexture(GL_TEXTURE1, renderer->loadTexture("src/Models/grass_texture_2.png"));
+    mat->addTexture(GL_TEXTURE2, renderer->loadTexture("src/Models/grass_texture_2.png"));
+    mat->addTexture(GL_TEXTURE3, renderer->loadTexture("src/Models/Solid_white.jpg"));
+    mat->addVec3("AmbientColor", glm::vec3(1.f));
+    mat->addVec3("DiffuseColor", glm::vec3(1.f));
+    mat->addVec3("SpecularColor", glm::vec3(1.f));
+    mat->addFloat("SpecularExponent", 1.f);
+    mat->addBool("blinn", false);
     uint32_t matIndex = renderer->addMaterial(mat);
 
     octree = std::make_shared<Octree>(10);
     renderer->addObject(octree, matIndex);
     objects.push_back(octree);
+
+
+    svo = std::make_shared<SVO>(3, NoiseGenerator());
+    glm::ivec3 size = glm::ivec3(3);
+    std::vector<float> densityValues = svo->getDensity(glm::ivec3(0), glm::ivec3(3), 1);
+    for (int x = 0; x < size.x; ++x) {
+        for (int y = 0; y < size.y; ++y) {
+            for (int z = 0; z < size.z; ++z) {
+                int index = x + size.x * (y + size.y * z);
+                std::cout << "Density at (" << x << ", " << y << ", " << z << "): " << densityValues[index] << std::endl;
+            }
+        }
+    }
 
 }
 

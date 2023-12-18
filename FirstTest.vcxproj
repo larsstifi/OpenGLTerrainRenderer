@@ -106,6 +106,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Terrain\SVO.cpp" />
     <ClCompile Include="src\Lighting\LightManager.cpp" />
     <ClCompile Include="src\Models\MeshRenderer.cpp" />
     <ClCompile Include="src\Models\Renderer.cpp" />
@@ -128,6 +129,7 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="src\Terrain\SVO.h" />
     <ClInclude Include="src\Lighting\LightManager.h" />
     <ClInclude Include="src\Models\Drawable.h" />
     <ClInclude Include="src\Models\MeshRenderer.h" />

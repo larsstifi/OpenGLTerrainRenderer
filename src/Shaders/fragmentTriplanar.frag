@@ -8,17 +8,12 @@ in vec2 TexCoords;
 uniform sampler2D AmbientTexture;
 uniform sampler2D DiffuseTexture;
 uniform sampler2D SpecularTexture;
-uniform sampler2D SpecularHighlightTexture;
 uniform sampler2D AlphaTexture;
-uniform sampler2D BumpTexture;
 //material parameters
 uniform vec3 AmbientColor;
 uniform vec3 DiffuseColor;
 uniform vec3 SpecularColor;
 uniform float SpecularExponent;
-uniform float OpticalDensity;
-uniform float Dissolve;
-uniform int Illumination;
 uniform bool blinn;
 
 

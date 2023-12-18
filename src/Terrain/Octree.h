@@ -26,7 +26,7 @@ struct OctreeNode {
 class Octree : public Drawable
 {
 public:
-	float LOD_Falloff = 0.05f;
+	float LOD_Falloff = 1.f;
 	ImGuiTextBuffer gui_Cout;
 	glm::vec3 playerPos = glm::vec3(0.f);
 	glm::vec3 octreePos = glm::vec3(0.f);

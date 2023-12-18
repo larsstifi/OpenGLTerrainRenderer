@@ -6,3 +6,8 @@ void NoiseGenerator::generateNoise(float* noiseOutput, int terrainSize, glm::vec
 	
 }
 
+float NoiseGenerator::getDensity(glm::vec3 pos)
+{
+	return fnGenerator->GenSingle3D(pos.x, pos.y, pos.z, 0);
+}
+

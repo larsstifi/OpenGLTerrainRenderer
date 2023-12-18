@@ -48,4 +48,5 @@ public:
 	void setLacunarity(float lacunarity) { fnFractal->SetLacunarity(lacunarity); };
 	void setScale(float scale) { fnGenerator->SetScale(scale);  };
 	void generateNoise(float* noiseOutput, int terrainSize, glm::vec3 noisePos = glm::vec3(0), float freq = 0.2, float scale = 1.f, int seed = rand());
+	float getDensity(glm::vec3 pos);
 };

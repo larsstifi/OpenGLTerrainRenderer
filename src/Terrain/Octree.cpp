@@ -65,7 +65,7 @@ void Octree::Update()
 			//calculate target LOD for this chunk
 			int halfsize = 1 << (curDepth - 1);
 			glm::vec3 d = ((glm::vec3(curPos) + glm::vec3(halfsize)) * (float)chunkSize + octreeCornerPos) * TerrainScale - playerPos;
-			int targetDepth = (sqrtf(glm::dot(d, d)) - halfsize * 2.f * TerrainScale * chunkSize) * LOD_Falloff;
+			int targetDepth = (sqrtf(glm::dot(d, d)) - halfsize * 2.f * TerrainScale * chunkSize) * LOD_Falloff / 10.f;
 			if (targetDepth < 0) targetDepth = 0;
 
 			//check if last node or below target depth, if so add this node and move up in tree          only check if this is the first iteration
